@@ -1,0 +1,7 @@
+FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
+COPY package.json api.js /usr/share/nginx/html/
+RUN apk update && apk add npm
+RUN npm install
+EXPOSE 8888
+CMD ["node", "api.js"]

@@ -1,0 +1,14 @@
+version: "3"
+services:
+  frontend:
+    container_name: frontend
+    image: sandropxl/expertlab3:fe
+    ports:
+      - "5500:80"
+  backend:
+    container_name: backend
+    image: sandropxl/expertlab3:be
+    ports:
+      - "8888:8888"
+    env_file:
+      - ../.env

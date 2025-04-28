@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jukebox</title>
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script src="player.js" type="module" defer></script>
+    <link rel="icon" href="imgs/favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="music-player">
+        <div id="player">
+            <div id="album-artwork">
+                <img id="player-image" src="imgs/cover.png" alt="Album Artwork">
+            </div>
+            <div id="track-info">
+                <h2 id="player-song">Song Name</h2>
+                <h3 id="player-artist">Artist Name</h3>
+            </div>
+            <div id="progress-container">
+                <span id="current-time">0:00</span>
+                <input type="range" id="progress-bar" min="0" max="100" value="0">
+                <span id="duration">0:00</span>
+            </div>
+        </div>
+        <div id="controls">
+            <button id="previous" class="control-button"></button>
+            <button id="togglePlay" class="play-button control-button"></button>
+            <button id="next" class="control-button"></button>
+        </div>
+    </div>
+</body>
+</html>
