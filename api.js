@@ -100,7 +100,7 @@ app.get('/play', (req, res) => {
 ########### RUN ############
 */
 
-console.log(`Listening at ${apiUrl}`);
+console.log(`API listening at ${apiUrl}`);
 app.listen(apiPort)
 
 // source: https://www.youtube.com/watch?v=TN1uvgAyxE0 
