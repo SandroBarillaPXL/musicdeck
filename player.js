@@ -10,6 +10,13 @@ const token = params.get('access_token');
 const seekBar = document.getElementById('progress-bar');
 const currentTime = document.getElementById('current-time');
 const durationTime = document.getElementById('duration');
+const playerSong = document.getElementById('player-song');
+const playerArtist = document.getElementById('player-artist');
+const playerImage = document.getElementById('player-image');
+const togglePlayBtn = document.getElementById('togglePlay');
+const nextBtn = document.getElementById('next');
+const previousBtn = document.getElementById('previous');
+
 let trackDuration = 0; // Store duration of the current track in milliseconds
 
 if (token) {
@@ -70,9 +77,9 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         const currentTrack = state.track_window.current_track;
         trackDuration = currentTrack.duration_ms;
 
-        document.getElementById('player-song').innerText = currentTrack.name;
-        document.getElementById('player-artist').innerText = currentTrack.artists[0].name;
-        document.getElementById('player-image').src = currentTrack.album.images[0].url;
+        playerSong.innerText = currentTrack.name;
+        playerArtist.innerText = currentTrack.artists[0].name;
+        playerImage.src = currentTrack.album.images[0].url;
 
         // Update the duration text in minutes and seconds
         durationTime.innerText = formatTime(trackDuration);
@@ -82,15 +89,15 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         updatePlayButton(state.paused); 
     });
 
-    document.getElementById('togglePlay').onclick = function() {
+    togglePlayBtn.onclick = function() {
       player.togglePlay();
     };
 
-    document.getElementById('next').onclick = function() {
+    nextBtn.onclick = function() {
       player.nextTrack();
     };
 
-    document.getElementById('previous').onclick = function() {
+    previousBtn.onclick = function() {
       player.previousTrack();
     };
 
@@ -109,23 +116,22 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         const newPosition = (e.target.value / 100) * trackDuration;
         player.seek(newPosition);
     });
+}
 
-    // Update seek bar UI based on the current track position
-    function updateSeekBar(position, duration) {
-        const percentage = (position / duration) * 100;
-        seekBar.value = percentage;
-        currentTime.innerText = formatTime(position);
-        seekBar.style.background = `linear-gradient(to right, #9000FF ${percentage}%, #b3b3b3 ${percentage}%)`;
-    }
+// Update seek bar UI based on the current track position
+function updateSeekBar(position, duration) {
+    const percentage = (position / duration) * 100;
+    seekBar.value = percentage;
+    currentTime.innerText = formatTime(position);
+    seekBar.style.background = `linear-gradient(to right, #9000FF ${percentage}%, #b3b3b3 ${percentage}%)`;
+}
 
-    // Update play button UI based on the current playback state
-    function updatePlayButton(paused) {
-        const playButton = document.getElementById("togglePlay");
-        if (paused) {
-            playButton.classList = "play-button control-button";
-        } else {
-            playButton.classList = "pause-button control-button";
-        }
+// Update play button UI based on the current playback state
+function updatePlayButton(paused) {
+    if (paused) {
+        togglePlayBtn.classList = "play-button control-button";
+    } else {
+        togglePlayBtn.classList = "pause-button control-button";
     }
 }
 
