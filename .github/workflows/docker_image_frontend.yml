@@ -9,6 +9,7 @@ on:
       - player.js
       - style.css
       - config.js
+      - read_rfid.py
       - imgs/**
   workflow_dispatch:
 
