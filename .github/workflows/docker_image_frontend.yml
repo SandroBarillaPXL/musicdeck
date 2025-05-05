@@ -26,5 +26,5 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: ${{ secrets.DOCKERHUB_USER }}/musicdeck:fe
+          tags: ${{ secrets.DOCKERHUB_USER }}/musicdeck:pi-fe
           file: ./docker/Dockerfile-fe

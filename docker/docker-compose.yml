@@ -2,12 +2,12 @@ version: "3"
 services:
   frontend:
     container_name: frontend
-    image: sandropxl/musicdeck:fe
+    image: sandropxl/musicdeck:pi-fe
     ports:
       - "5500:80"
   backend:
     container_name: backend
-    image: sandropxl/musicdeck:be
+    image: sandropxl/musicdeck:pi-be
     ports:
       - "8888:8888"
     env_file:
