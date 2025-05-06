@@ -145,7 +145,7 @@ function readRfidCard(player, deviceId) {
 
 function resetPlayerUI() {
     playerSong.innerText = "No song playing";
-    playerArtist.innerText = "";
+    playerArtist.innerText = "Insert a card to play";
     playerImage.src = "imgs/icon.png";
     durationTime.innerText = "0:00";
     currentTime.innerText = "0:00";

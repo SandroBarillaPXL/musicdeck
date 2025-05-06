@@ -118,7 +118,7 @@ app.get('/rfid', (req, res) => {
       const output = stdout.trim().split('\n');
       const uid = output[0];
       const spotifyUri = output[1];
-      console.log(`Card UID: ${uid}, Spotify URI: ${spotifyUri}`);
+      //console.log(`Card UID: ${uid}, Spotify URI: ${spotifyUri}`);
   
       // Return UID and URI
       res.json({ uid, spotifyUri });
