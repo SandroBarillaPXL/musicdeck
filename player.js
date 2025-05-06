@@ -98,16 +98,10 @@ function updateSeekBar(position, duration) {
     seekBar.style.background = `linear-gradient(to right, #9000FF ${percentage}%, #b3b3b3 ${percentage}%)`;
 }
 
-// Update play button UI based on the current playback state
 function updatePlayButton(paused) {
-    if (paused) {
-        togglePlayBtn.classList = "play-button control-button";
-    } else {
-        togglePlayBtn.classList = "pause-button control-button";
-    }
+    togglePlayBtn.className = paused ? "play-button control-button" : "pause-button control-button";
 }
 
-// Format time from milliseconds to MM:SS
 function formatTime(ms) {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
