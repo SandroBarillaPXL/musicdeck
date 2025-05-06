@@ -130,7 +130,7 @@ function readRfidCard(player, deviceId) {
                 return;
             }
 
-            if (uid !== lastUid && spotifyUri?.startsWith('spotify:track:')) {
+            if (uid !== lastUid && spotifyUri?.startsWith('spotify:')) {
                 console.log("New card detected!", uid);
                 lastUid = uid;
                 playerInfoHidden = false; // Re-enable UI updates
