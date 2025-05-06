@@ -107,3 +107,33 @@ function formatTime(ms) {
     const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
     return `${minutes}:${seconds}`;
 }
+
+// Calls your backend to read RFID card (replace with your own endpoint)
+function readRfidCard(player, deviceId) {
+    if (polling) return;
+    polling = true;
+
+    fetch(`${apiUrl}/rfid`)
+        .then(res => res.json())
+        .then(data => {
+            polling = false;
+            const { uid, spotifyUri } = data;
+
+            if (!uid && lastUid !== null) {
+                console.log("Card removed");
+                lastUid = null;
+                player.pause();
+                return;
+            }
+
+            if (uid !== lastUid && spotifyUri?.startsWith('spotify:track:')) {
+                console.log("New card detected!", uid);
+                lastUid = uid;
+                fetch(`${apiUrl}/play?uri=${encodeURIComponent(spotifyUri)}&device_id=${deviceId}`);
+            }
+        })
+        .catch(err => {
+            polling = false;
+            console.error("RFID polling failed:", err);
+        });
+}
