@@ -6,6 +6,7 @@ import express from "express";
 import cors from "cors";
 import SpotifyWebApi from "spotify-web-api-node";
 import dotenv from "dotenv";
+import { exec } from 'child_process';
 dotenv.config();
 
 const apiPort = 8888
@@ -95,6 +96,24 @@ app.get('/play', (req, res) => {
     });
 });
 
+
+// ## RFID ##
+app.get('/rfid', (req, res) => {
+    exec('python3 read_rfid.py', (error, stdout, stderr) => {
+      if (error) {
+        // No card or read error
+        return res.json({});
+      }
+  
+      const output = stdout.trim().split('\n');
+      const uid = output[0];
+      const spotifyUri = output[1];
+      console.log(`Card UID: ${uid}, Spotify URI: ${spotifyUri}`);
+  
+      // Return UID and URI
+      res.json({ uid, spotifyUri });
+    });
+  });
 
 /*
 ########### RUN ############
