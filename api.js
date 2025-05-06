@@ -85,15 +85,25 @@ app.get('/song', (req, res) => {
 });
 
 // ## PLAY ##
-app.get('/play', (req, res) => {
+app.get('/play', async (req, res) => {
     const { uri, device_id } = req.query;
-    spotifyApi.transferMyPlayback([device_id])
-    .then(() => spotifyApi.play({ uris: [uri], device_id: device_id }))
-    .then(() => res.send('Playback started'))
-    .catch(err => {
-        console.error('Play Error:', err);
-        res.send('Error occurred during playback');
-    });
+
+    if (!uri || !device_id) {
+        return res.status(400).json({ error: 'Missing uri or device_id' });
+    }
+
+    try {
+        // Start playback of the track
+        await spotifyApi.play({
+            device_id: device_id,
+            uris: [uri],
+            position_ms: 0 // Start from the beginning
+        });
+        res.sendStatus(200);
+    } catch (err) {
+        console.error("Failed to play track:", err.body || err);
+        res.status(500).json({ error: 'Playback failed' });
+    }
 });
 
 
