@@ -67,7 +67,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         trackDuration = currentTrack.duration_ms;
 
         playerSong.innerText = currentTrack.name;
-        playerArtist.innerText = currentTrack.artists[0].name;
+        playerArtist.innerText = currentTrack.artists.map(artist => artist.name).join(', ');
         playerImage.src = currentTrack.album.images[0].url;
         durationTime.innerText = formatTime(trackDuration);
         updateSeekBar(state.position, trackDuration);
