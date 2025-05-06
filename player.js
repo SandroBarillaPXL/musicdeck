@@ -4,6 +4,7 @@ const apiUrl = config.apiUrl;
 let lastUid = null;
 let polling = false;
 let trackDuration = 0;
+let playerInfoHidden = false;
 
 // DOM elements
 const seekBar = document.getElementById('progress-bar');
@@ -61,7 +62,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     player.addListener('account_error', ({ message }) => console.error(message));
 
     player.addListener('player_state_changed', (state) => {
-        if (!state) return;
+        if (!state || playerInfoHidden) return;
 
         const currentTrack = state.track_window.current_track;
         trackDuration = currentTrack.duration_ms;
@@ -80,6 +81,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     player.connect();
 
     setInterval(() => {
+        if (playerInfoHidden) return;
         player.getCurrentState().then(state => {
             if (state) updateSeekBar(state.position, trackDuration);
         });
@@ -122,13 +124,16 @@ function readRfidCard(player, deviceId) {
             if (!uid && lastUid !== null) {
                 console.log("Card removed");
                 lastUid = null;
+                playerInfoHidden = true; // Prevent future UI updates
                 player.pause();
+                resetPlayerUI();
                 return;
             }
 
             if (uid !== lastUid && spotifyUri?.startsWith('spotify:track:')) {
                 console.log("New card detected!", uid);
                 lastUid = uid;
+                playerInfoHidden = false; // Re-enable UI updates
                 fetch(`${apiUrl}/play?uri=${encodeURIComponent(spotifyUri)}&device_id=${deviceId}`);
             }
         })
@@ -136,4 +141,15 @@ function readRfidCard(player, deviceId) {
             polling = false;
             console.error("RFID polling failed:", err);
         });
+}
+
+function resetPlayerUI() {
+    playerSong.innerText = "No song playing";
+    playerArtist.innerText = "";
+    playerImage.src = "imgs/icon.png";
+    durationTime.innerText = "0:00";
+    currentTime.innerText = "0:00";
+    seekBar.value = 0;
+    seekBar.style.background = `linear-gradient(to right, #9000FF 0%, #b3b3b3 0%)`;
+    updatePlayButton(true); // Show as paused
 }
