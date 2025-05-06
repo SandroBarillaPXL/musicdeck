@@ -1,20 +1,12 @@
-import MFRC522
-import signal
-import sys
+import RPi.GPIO as GPIO
+from mfrc522 import SimpleMFRC522
 
-reader = MFRC522.MFRC522()
-uri = "spotify:album:3DQueEd1Ft9PHWgovDzPKh" # Fred again.. - ten days
+reader = SimpleMFRC522()
 
-data = [ord(c) for c in uri.ljust(16, '\x00')]  # Block is 16 bytes
-block = 8
-key = [0xFF] * 6
-
-(status, TagType) = reader.MFRC522_Request(reader.PICC_REQIDL)
-(status, uid) = reader.MFRC522_Anticoll()
-
-if reader.MFRC522_Auth(reader.PICC_AUTHENT1A, block, key, uid) == reader.MI_OK:
-    reader.MFRC522_Write(block, data)
-    reader.MFRC522_StopCrypto1()
-    print("URI written to card.")
-else:
-    print("Authentication failed.")
+try:
+        uri = "spotify:album:3DQueEd1Ft9PHWgovDzPKh" # Fred again.. - ten days
+        print("Now place your tag to write")
+        reader.write(uri)
+        print("Written")
+finally:
+        GPIO.cleanup()
