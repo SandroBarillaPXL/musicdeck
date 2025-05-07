@@ -12,10 +12,15 @@ const currentTime = document.getElementById('current-time');
 const durationTime = document.getElementById('duration');
 const playerSong = document.getElementById('player-song');
 const playerArtist = document.getElementById('player-artist');
+const playerAlbum = document.getElementById('player-album');
 const playerImage = document.getElementById('player-image');
 const togglePlayBtn = document.getElementById('togglePlay');
 const nextBtn = document.getElementById('next');
 const previousBtn = document.getElementById('previous');
+const openFullscreenBtn = document.getElementById('open-fullscreen');
+const closeFullscreenBtn = document.getElementById('close-fullscreen');
+const fullscreenOverlay = document.getElementById('fullscreen-overlay');
+const fullscreenImage = document.getElementById('fullscreen-image');
 
 // Auth: Clear any old token and extract new one from URL
 localStorage.removeItem('spotifyAccessToken');
@@ -67,12 +72,12 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 
         const currentTrack = state.track_window.current_track;
         trackDuration = currentTrack.duration_ms;
-
         playerAlbum.innerText = currentTrack.album.name;
         playerSong.innerText = currentTrack.name;
         playerArtist.innerText = currentTrack.artists.map(artist => artist.name).join(', ');
         playerImage.src = currentTrack.album.images[0].url;
         durationTime.innerText = formatTime(trackDuration);
+        fullscreenImage.src = currentTrack.album.images[0].url;
         updateSeekBar(state.position, trackDuration);
         updatePlayButton(state.paused);
     });
@@ -157,7 +162,7 @@ function hidePlayerUi() {
     currentTime.style.display = "none";
     durationTime.style.display = "none";
     playerImage.src = "imgs/icon.png";
-    updatePlayButton(true); // Show as paused
+    fullscreenImage.src = 'imgs/icon.png';
 }
 
 function showPlayerUi() {
@@ -169,3 +174,13 @@ function showPlayerUi() {
     durationTime.style.display = "block";
 }
 
+openFullscreenBtn.addEventListener('click', () => {
+    fullscreenOverlay.style.display = 'flex';
+    fullscreenImage.src = playerImage.src;
+    openFullscreenBtn.style.display = 'none';
+});
+
+closeFullscreenBtn.addEventListener('click', () => {
+    fullscreenOverlay.style.display = 'none';
+    openFullscreenBtn.style.display = 'block';
+});
