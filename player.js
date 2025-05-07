@@ -51,6 +51,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 
         // Start polling for RFID card after player is ready
         setInterval(() => readRfidCard(player, device_id), 500);
+        hidePlayerUi();
     });
 
     player.addListener('not_ready', ({ device_id }) => {
@@ -67,6 +68,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         const currentTrack = state.track_window.current_track;
         trackDuration = currentTrack.duration_ms;
 
+        playerAlbum.innerText = currentTrack.album.name;
         playerSong.innerText = currentTrack.name;
         playerArtist.innerText = currentTrack.artists.map(artist => artist.name).join(', ');
         playerImage.src = currentTrack.album.images[0].url;
@@ -126,7 +128,7 @@ function readRfidCard(player, deviceId) {
                 lastUid = null;
                 playerInfoHidden = true; // Prevent future UI updates
                 player.pause();
-                resetPlayerUI();
+                hidePlayerUi();
                 return;
             }
 
@@ -135,6 +137,7 @@ function readRfidCard(player, deviceId) {
                 lastUid = uid;
                 playerInfoHidden = false; // Re-enable UI updates
                 fetch(`${apiUrl}/play?uri=${encodeURIComponent(spotifyUri)}&device_id=${deviceId}`);
+                showPlayerUi();
             }
         })
         .catch(err => {
@@ -143,13 +146,26 @@ function readRfidCard(player, deviceId) {
         });
 }
 
-function resetPlayerUI() {
+function hidePlayerUi() {
     playerSong.innerText = "No song playing";
     playerArtist.innerText = "Insert a card to play";
+    playerAlbum.innerText = "";
+    nextBtn.style.display = "none";
+    previousBtn.style.display = "none";
+    togglePlayBtn.style.display = "none";
+    seekBar.style.display = "none";
+    currentTime.style.display = "none";
+    durationTime.style.display = "none";
     playerImage.src = "imgs/icon.png";
-    durationTime.innerText = "0:00";
-    currentTime.innerText = "0:00";
-    seekBar.value = 0;
-    seekBar.style.background = `linear-gradient(to right, #9000FF 0%, #b3b3b3 0%)`;
     updatePlayButton(true); // Show as paused
 }
+
+function showPlayerUi() {
+    nextBtn.style.display = "block";
+    previousBtn.style.display = "block";
+    togglePlayBtn.style.display = "block";
+    seekBar.style.display = "block";
+    currentTime.style.display = "block";
+    durationTime.style.display = "block";
+}
+
