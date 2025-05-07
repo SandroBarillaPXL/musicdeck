@@ -21,6 +21,9 @@ const openFullscreenBtn = document.getElementById('open-fullscreen');
 const closeFullscreenBtn = document.getElementById('close-fullscreen');
 const fullscreenOverlay = document.getElementById('fullscreen-overlay');
 const fullscreenImage = document.getElementById('fullscreen-image');
+const volumeBtn = document.getElementById('volume-btn');
+const volumeSlider = document.getElementById('volume-slider');
+let volumeTimeout = null;
 
 // Auth: Clear any old token and extract new one from URL
 localStorage.removeItem('spotifyAccessToken');
@@ -55,7 +58,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         localStorage.setItem('device_id', device_id);
 
         // Start polling for RFID card after player is ready
-        setInterval(() => readRfidCard(player, device_id), 500);
+        setInterval(() => readRfidCard(player, device_id), 250);
         hidePlayerUi();
     });
 
@@ -97,6 +100,17 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     seekBar.addEventListener('input', (e) => {
         const newPosition = (e.target.value / 100) * trackDuration;
         player.seek(newPosition);
+    });
+
+    volumeSlider.addEventListener('input', (e) => {
+        const volume = e.target.value / 100;
+        player.setVolume(volume).catch(err => console.error('Failed to set volume:', err));
+
+        // Reset hide timeout
+        clearTimeout(volumeTimeout);
+        volumeTimeout = setTimeout(() => {
+            volumeSlider.style.display = 'none';
+        }, 3000);
     });
 };
 
@@ -158,6 +172,7 @@ function hidePlayerUi() {
     nextBtn.style.display = "none";
     previousBtn.style.display = "none";
     togglePlayBtn.style.display = "none";
+    volumeBtn.style.display = "none";
     seekBar.style.display = "none";
     currentTime.style.display = "none";
     durationTime.style.display = "none";
@@ -169,6 +184,7 @@ function showPlayerUi() {
     nextBtn.style.display = "block";
     previousBtn.style.display = "block";
     togglePlayBtn.style.display = "block";
+    volumeBtn.style.display = "block";
     seekBar.style.display = "block";
     currentTime.style.display = "block";
     durationTime.style.display = "block";
@@ -184,3 +200,31 @@ closeFullscreenBtn.addEventListener('click', () => {
     fullscreenOverlay.style.display = 'none';
     openFullscreenBtn.style.display = 'block';
 });
+
+volumeBtn.addEventListener('click', showSlider);
+volumeSlider.addEventListener('input', resetVolumeTimeout);
+volumeSlider.addEventListener('pointerdown', resetVolumeTimeout);
+volumeSlider.addEventListener('pointerup', resetVolumeTimeout);
+
+function showSlider() {
+    volumeSlider.style.opacity = '1';
+    volumeSlider.style.pointerEvents = 'auto';
+    volumeBtn.style.opacity = '0';
+    volumeBtn.style.pointerEvents = 'none';
+
+    resetVolumeTimeout();
+}
+
+function hideSlider() {
+    volumeSlider.style.opacity = '0';
+    volumeSlider.style.pointerEvents = 'none';
+    volumeBtn.style.opacity = '1';
+    volumeBtn.style.pointerEvents = 'auto';
+}
+
+function resetVolumeTimeout() {
+    clearTimeout(volumeTimeout);
+    volumeTimeout = setTimeout(() => {
+        hideSlider();
+    }, 3000);
+}
