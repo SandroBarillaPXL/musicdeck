@@ -270,9 +270,29 @@ button {
     list-style: none;
     padding: 0;
     margin: 0;
-    overflow-y: auto;
+    overflow-y: scroll; /* Ensure scrolling */
     flex-grow: 1;
-    max-height: 300px;
+    max-height: 300px; /* Adjust based on your design */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on touch devices */
+}
+
+/* For Webkit browsers (Chrome, Safari, newer Edge) */
+#next-up-list::-webkit-scrollbar {
+    width: 50px; /* Set scrollbar width to 16px for visibility */
+}
+
+#next-up-list::-webkit-scrollbar-track {
+    background: transparent; /* Transparent track */
+}
+
+#next-up-list::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.4); /* Light thumb color */
+    border-radius: 10px; /* Rounded corners */
+    height: 40px; /* Make the thumb bigger */
+}
+
+#next-up-list::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.7); /* Darker thumb on hover */
 }
 
 #next-up-list li {
