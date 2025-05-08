@@ -75,44 +75,48 @@ app.get('/nextUp', async (req, res) => {
     if (!uri || !uri.startsWith('spotify:')) {
         return res.status(400).json({ error: 'Invalid Spotify URI' });
     }
-
     const [type, id] = uri.split(':').slice(1);
-
     try {
         let songs = [];
         let imgUrl = '';
-
         if (type === 'album') {
             const albumTracks = await spotifyApi.getAlbumTracks(id, { limit: 50 });
             const albumData = await spotifyApi.getAlbum(id);
             imgUrl = albumData.body.images?.[0]?.url || '';
-
             songs = albumTracks.body.items.map(track => ({
                 name: track.name,
                 uri: track.uri,
                 artists: track.artists.map(artist => artist.name),
                 imgUrl
             }));
-
-
         } else if (type === 'playlist') {
-            const playlistTracks = await spotifyApi.getPlaylistTracks(id, { limit: 50 });          
-            const playlistData = await spotifyApi.getPlaylist(id);
-            imgUrl = playlistData.body.images?.[0]?.url || '';
-          
-            songs = playlistTracks.body.items
-            .filter(item => item.track && item.track.uri) // filter out any nulls or missing tracks
-            .map(item => ({
-                name: item.track.name,
-                uri: item.track.uri,
-                artists: item.track.artists.map(artist => artist.name),
-                imgUrl: item.track.album.images?.[0]?.url || ''
-            }));
-          
+            let playlistTracks = [];
+            let offset = 0;
+            let totalTracks = 0;
+            while (true) {
+                const response = await spotifyApi.getPlaylistTracks(id, {
+                    limit: 50,
+                    offset: offset
+                }); 
+                const data = response.body;
+                playlistTracks = playlistTracks.concat(data.items);  // Append new tracks
+                totalTracks = data.total;
+                offset += 50;
+                if (offset >= totalTracks) break; // Stop if we've fetched all the tracks
+            }
+            // Handle the playlist data
+            imgUrl = playlistTracks.length ? playlistTracks[0].track.album.images?.[0]?.url || '' : '';
+            songs = playlistTracks
+                .filter(item => item.track && item.track.uri)  // Filter out missing tracks
+                .map(item => ({
+                    name: item.track.name,
+                    uri: item.track.uri,
+                    artists: item.track.artists.map(artist => artist.name),
+                    imgUrl: item.track.album.images?.[0]?.url || ''
+                }));
         } else {
             return res.status(400).json({ error: 'Unsupported URI type' });
         }
-
         res.json({ albumInfo: songs });
     } catch (error) {
         console.error('Error fetching tracks:', error);
