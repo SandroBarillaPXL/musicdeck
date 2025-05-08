@@ -23,6 +23,10 @@ const fullscreenOverlay = document.getElementById('fullscreen-overlay');
 const fullscreenImage = document.getElementById('fullscreen-image');
 const volumeBtn = document.getElementById('volume-btn');
 const volumeSlider = document.getElementById('volume-slider');
+const nextUpBtn = document.getElementById('next-up-btn');
+const nextUpList = document.getElementById('next-up-list');
+const nextUpTitle = document.getElementById('next-up-title');
+const nextUpPopup = document.getElementById('next-up-popup');
 let volumeTimeout = null;
 
 // Auth: Clear any old token and extract new one from URL
@@ -112,7 +116,64 @@ window.onSpotifyWebPlaybackSDKReady = () => {
             volumeSlider.style.display = 'none';
         }, 3000);
     });
+
+    nextUpBtn.addEventListener('click', () => {
+        player.getCurrentState().then(state => {
+            if (!state) {
+                console.error("No player state available.");
+                return;
+            }
+    
+            const currentTrackUri = state.track_window.current_track.uri;
+    
+            fetch(`${apiUrl}/rfid`)
+            .then(res => res.json())
+            .then(rfidData => {
+                const currentAlbumUri = rfidData.spotifyUri;
+                
+                fetch(`${apiUrl}/nextUp?uri=${encodeURIComponent(currentAlbumUri)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                    const allTracks = data.albumInfo;
+                    const index = allTracks.findIndex(track => track.uri === currentTrackUri);
+                    const nextTracks = index >= 0 ? allTracks.slice(index + 1) : [];
+                    renderNextUp(nextTracks);
+                    })
+                    .catch(err => console.error("Failed to fetch album info:", err));
+                })
+            .catch(err => {
+                console.warn("RFID fetch failed, falling back to next_tracks.");
+                const nextTracks = state.track_window.next_tracks.map(track => ({
+                    name: track.name,
+                    artists: track.artists.map(artist => artist.name),
+                    imgUrl: track.album.images?.[0]?.url || '',
+                    uri: track.uri
+                }));
+                renderNextUp(nextTracks);
+            });
+        }).catch(err => {
+            console.error("Failed to fetch player state:", err);
+        });
+    });    
 };
+
+function renderNextUp(nextTracks) {
+    if (!nextTracks.length) {
+        nextUpList.innerHTML = "<li>No upcoming tracks</li>";
+    } else {
+        nextUpList.innerHTML = nextTracks.map(track => `
+            <li>
+                <img src="${track.imgUrl}" alt="${track.name}" class="next-up-image">
+                <div class="next-up-info">
+                    <span class="next-up-title">${track.name}</span> - 
+                    <span class="next-up-artist">${track.artists.join(', ')}</span>
+                </div>
+            </li>
+        `).join('');
+    }
+    nextUpPopup.style.display = 'block';
+    nextUpTitle.innerText = "Next Up";
+}
 
 function updateSeekBar(position, duration) {
     const percentage = (position / duration) * 100;

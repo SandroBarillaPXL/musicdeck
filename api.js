@@ -69,19 +69,55 @@ app.get('/callback', (req, res) => {
     });
 });
 
-// ## SONG INFO ##
-app.get('/song', (req, res) => {
+// ## GET NEXT SONGS ##
+app.get('/nextUp', async (req, res) => {
     const uri = req.query.uri;
-    spotifyApi.getTrack(uri)
-    .then(songData => {
-        const { name, artists, album, duration_ms, external_urls } = songData.body;
-        const imgUrl = album.images[0].url;
-        const songInfo = { name, artists, album, duration_ms, imgUrl, external_urls };
-        res.send({songInfo: songInfo});
-    }).catch(err => {
-        console.error('Song Info Error:', err);
-        res.send('Error occurred during song info retrieval');
-    });
+    if (!uri || !uri.startsWith('spotify:')) {
+        return res.status(400).json({ error: 'Invalid Spotify URI' });
+    }
+
+    const [type, id] = uri.split(':').slice(1);
+
+    try {
+        let songs = [];
+        let imgUrl = '';
+
+        if (type === 'album') {
+            const albumTracks = await spotifyApi.getAlbumTracks(id, { limit: 50 });
+            const albumData = await spotifyApi.getAlbum(id);
+            imgUrl = albumData.body.images?.[0]?.url || '';
+
+            songs = albumTracks.body.items.map(track => ({
+                name: track.name,
+                uri: track.uri,
+                artists: track.artists.map(artist => artist.name),
+                imgUrl
+            }));
+
+
+        } else if (type === 'playlist') {
+            const playlistTracks = await spotifyApi.getPlaylistTracks(id, { limit: 50 });          
+            const playlistData = await spotifyApi.getPlaylist(id);
+            imgUrl = playlistData.body.images?.[0]?.url || '';
+          
+            songs = playlistTracks.body.items
+            .filter(item => item.track && item.track.uri) // filter out any nulls or missing tracks
+            .map(item => ({
+                name: item.track.name,
+                uri: item.track.uri,
+                artists: item.track.artists.map(artist => artist.name),
+                imgUrl: item.track.album.images?.[0]?.url || ''
+            }));
+          
+        } else {
+            return res.status(400).json({ error: 'Unsupported URI type' });
+        }
+
+        res.json({ albumInfo: songs });
+    } catch (error) {
+        console.error('Error fetching tracks:', error);
+        res.status(500).json({ error: 'Failed to fetch tracks' });
+    }
 });
 
 // ## PLAY ##
@@ -93,7 +129,7 @@ app.get('/play', async (req, res) => {
     }
   
     try {
-      const [type, id] = uri.split(':').slice(1);
+        const [type, id] = uri.split(':').slice(1);
   
       if (type === "track") {
         await spotifyApi.play({
@@ -102,21 +138,21 @@ app.get('/play', async (req, res) => {
             position_ms: 0
         });
       } else if (type === "album") {
-        const albumTracks = await spotifyApi.getAlbumTracks(id, { limit: 50 });
-        const uris = albumTracks.body.items.map(track => track.uri);
-        await spotifyApi.play({
-            device_id: device_id,
-            uris,
-            position_ms: 0
+          const albumTracks = await spotifyApi.getAlbumTracks(id, { limit: 50 });
+          const uris = albumTracks.body.items.map(track => track.uri);
+          await spotifyApi.play({
+              device_id: device_id,
+              uris,
+              position_ms: 0
         });
       } else if (type === "playlist") {
-        await spotifyApi.play({
-            device_id: device_id,
-            context_uri: uri,
-            position_ms: 0
-        });
+          await spotifyApi.play({
+              device_id: device_id,
+              context_uri: uri,
+              position_ms: 0
+          });
       } else {
-        return res.status(400).json({ error: "Unsupported Spotify URI type" });
+          return res.status(400).json({ error: "Unsupported Spotify URI type" });
       }
   
       res.json({ status: "Playback started" });
