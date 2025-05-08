@@ -5,6 +5,7 @@ let lastUid = null;
 let polling = false;
 let trackDuration = 0;
 let playerInfoHidden = false;
+let volumeTimeout = null;
 
 // DOM elements
 const seekBar = document.getElementById('progress-bar');
@@ -23,11 +24,11 @@ const fullscreenOverlay = document.getElementById('fullscreen-overlay');
 const fullscreenImage = document.getElementById('fullscreen-image');
 const volumeBtn = document.getElementById('volume-btn');
 const volumeSlider = document.getElementById('volume-slider');
-const nextUpBtn = document.getElementById('next-up-btn');
+const nextUpOpenBtn = document.getElementById('next-up-open-btn');
+const nextUpCloseBtn = document.getElementById('next-up-close-btn');
 const nextUpList = document.getElementById('next-up-list');
 const nextUpTitle = document.getElementById('next-up-title');
 const nextUpPopup = document.getElementById('next-up-popup');
-let volumeTimeout = null;
 
 // Auth: Clear any old token and extract new one from URL
 localStorage.removeItem('spotifyAccessToken');
@@ -117,7 +118,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         }, 3000);
     });
 
-    nextUpBtn.addEventListener('click', () => {
+    nextUpOpenBtn.addEventListener('click', () => {
         player.getCurrentState().then(state => {
             if (!state) {
                 console.error("No player state available.");
@@ -171,8 +172,11 @@ function renderNextUp(nextTracks) {
             </li>
         `).join('');
     }
-    nextUpPopup.style.display = 'block';
-    nextUpTitle.innerText = "Next Up";
+    nextUpPopup.style.display = 'flex';
+    const titleSpan = nextUpTitle.querySelector('span');
+    if (titleSpan) {
+        titleSpan.innerText = "Next Up";
+    }
 }
 
 function updateSeekBar(position, duration) {
@@ -266,6 +270,7 @@ volumeBtn.addEventListener('click', showSlider);
 volumeSlider.addEventListener('input', resetVolumeTimeout);
 volumeSlider.addEventListener('pointerdown', resetVolumeTimeout);
 volumeSlider.addEventListener('pointerup', resetVolumeTimeout);
+nextUpCloseBtn.addEventListener('click', () => {nextUpPopup.style.display = 'none';});
 
 function showSlider() {
     volumeSlider.style.opacity = '1';
