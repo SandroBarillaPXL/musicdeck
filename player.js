@@ -1,6 +1,7 @@
 import config from '../config.js';
 const apiUrl = config.apiUrl;
 
+// Global variables
 let lastUid = null;
 let polling = false;
 let trackDuration = 0;
@@ -158,6 +159,41 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     });   
 };
 
+
+// Functions -- MAIN
+function readRfidCard(player, deviceId) {
+    if (polling) return;
+    polling = true;
+
+    fetch(`${apiUrl}/rfid`)
+        .then(res => res.json())
+        .then(data => {
+            polling = false;
+            const { uid, spotifyUri } = data;
+
+            if (!uid && lastUid !== null) {
+                console.log("Card removed");
+                lastUid = null;
+                playerInfoHidden = true; // Prevent future UI updates
+                player.pause();
+                hidePlayerUi();
+                return;
+            }
+
+            if (uid !== lastUid && spotifyUri?.startsWith('spotify:')) {
+                console.log("New card detected!", uid);
+                lastUid = uid;
+                playerInfoHidden = false; // Re-enable UI updates
+                fetch(`${apiUrl}/play?uri=${encodeURIComponent(spotifyUri)}&device_id=${deviceId}`);
+                showPlayerUi();
+            }
+        })
+        .catch(err => {
+            polling = false;
+            console.error("RFID polling failed:", err);
+        });
+}
+
 function renderNextUp(nextTracks, contextUri, currentTrackIndex) {
     if (!nextTracks.length) {
         nextUpList.innerHTML = "<li>No upcoming tracks</li>";
@@ -200,57 +236,7 @@ function renderNextUp(nextTracks, contextUri, currentTrackIndex) {
     }
 }
 
-function updateSeekBar(position, duration) {
-    const percentage = (position / duration) * 100;
-    seekBar.value = percentage;
-    currentTime.innerText = formatTime(position);
-    seekBar.style.background = `linear-gradient(to right, #9000FF ${percentage}%, #b3b3b3 ${percentage}%)`;
-}
-
-function updatePlayButton(paused) {
-    togglePlayBtn.className = paused ? "play-button control-button" : "pause-button control-button";
-}
-
-function formatTime(ms) {
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
-    return `${minutes}:${seconds}`;
-}
-
-// Calls your backend to read RFID card (replace with your own endpoint)
-function readRfidCard(player, deviceId) {
-    if (polling) return;
-    polling = true;
-
-    fetch(`${apiUrl}/rfid`)
-        .then(res => res.json())
-        .then(data => {
-            polling = false;
-            const { uid, spotifyUri } = data;
-
-            if (!uid && lastUid !== null) {
-                console.log("Card removed");
-                lastUid = null;
-                playerInfoHidden = true; // Prevent future UI updates
-                player.pause();
-                hidePlayerUi();
-                return;
-            }
-
-            if (uid !== lastUid && spotifyUri?.startsWith('spotify:')) {
-                console.log("New card detected!", uid);
-                lastUid = uid;
-                playerInfoHidden = false; // Re-enable UI updates
-                fetch(`${apiUrl}/play?uri=${encodeURIComponent(spotifyUri)}&device_id=${deviceId}`);
-                showPlayerUi();
-            }
-        })
-        .catch(err => {
-            polling = false;
-            console.error("RFID polling failed:", err);
-        });
-}
-
+// Functions -- UI
 function hidePlayerUi() {
     playerSong.innerText = "No song playing";
     playerArtist.innerText = "Insert a card to play";
@@ -264,6 +250,8 @@ function hidePlayerUi() {
     durationTime.style.display = "none";
     playerImage.src = "imgs/icon.png";
     fullscreenImage.src = 'imgs/icon.png';
+    nextUpPopup.style.display = 'none';
+    nextUpOpenBtn.style.display = 'none';
 }
 
 function showPlayerUi() {
@@ -274,31 +262,25 @@ function showPlayerUi() {
     seekBar.style.display = "block";
     currentTime.style.display = "block";
     durationTime.style.display = "block";
+    nextUpOpenBtn.style.display = "block";
 }
 
-openFullscreenBtn.addEventListener('click', () => {
+function openFullScreen() {
     fullscreenOverlay.style.display = 'flex';
     fullscreenImage.src = playerImage.src;
     openFullscreenBtn.style.display = 'none';
-});
+}
 
-closeFullscreenBtn.addEventListener('click', () => {
+function closeFullScreen() {
     fullscreenOverlay.style.display = 'none';
     openFullscreenBtn.style.display = 'block';
-});
-
-volumeBtn.addEventListener('click', showSlider);
-volumeSlider.addEventListener('input', resetVolumeTimeout);
-volumeSlider.addEventListener('pointerdown', resetVolumeTimeout);
-volumeSlider.addEventListener('pointerup', resetVolumeTimeout);
-nextUpCloseBtn.addEventListener('click', () => {nextUpPopup.style.display = 'none';});
+}
 
 function showSlider() {
     volumeSlider.style.opacity = '1';
     volumeSlider.style.pointerEvents = 'auto';
     volumeBtn.style.opacity = '0';
     volumeBtn.style.pointerEvents = 'none';
-
     resetVolumeTimeout();
 }
 
@@ -309,9 +291,37 @@ function hideSlider() {
     volumeBtn.style.pointerEvents = 'auto';
 }
 
+// FUNCTIONS -- UX
+function updateSeekBar(position, duration) {
+    const percentage = (position / duration) * 100;
+    seekBar.value = percentage;
+    currentTime.innerText = formatTime(position);
+    seekBar.style.background = `linear-gradient(to right, #9000FF ${percentage}%, #b3b3b3 ${percentage}%)`;
+}
+
+function updatePlayButton(paused) {
+    togglePlayBtn.className = paused ? "play-button control-button" : "pause-button control-button";
+}
+
+// FUNCTIONS -- HELPERS
+function formatTime(ms) {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+    return `${minutes}:${seconds}`;
+}
+
 function resetVolumeTimeout() {
     clearTimeout(volumeTimeout);
     volumeTimeout = setTimeout(() => {
         hideSlider();
     }, 3000);
 }
+
+// Add event listeners
+openFullscreenBtn.addEventListener('click', openFullScreen);
+closeFullscreenBtn.addEventListener('click', closeFullScreen);
+volumeBtn.addEventListener('click', showSlider);
+volumeSlider.addEventListener('input', resetVolumeTimeout);
+volumeSlider.addEventListener('pointerdown', resetVolumeTimeout);
+volumeSlider.addEventListener('pointerup', resetVolumeTimeout);
+nextUpCloseBtn.addEventListener('click', () => {nextUpPopup.style.display = 'none';});
