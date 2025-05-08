@@ -124,9 +124,8 @@ window.onSpotifyWebPlaybackSDKReady = () => {
                 console.error("No player state available.");
                 return;
             }
-    
             const currentTrackUri = state.track_window.current_track.uri;
-    
+            const currentContextUri = state.context.uri;
             fetch(`${apiUrl}/rfid`)
             .then(res => res.json())
             .then(rfidData => {
@@ -136,9 +135,10 @@ window.onSpotifyWebPlaybackSDKReady = () => {
                     .then(res => res.json())
                     .then(data => {
                     const allTracks = data.albumInfo;
+                    const currentTrackIndex = allTracks.findIndex(track => track.uri === currentTrackUri);
                     const index = allTracks.findIndex(track => track.uri === currentTrackUri);
                     const nextTracks = index >= 0 ? allTracks.slice(index + 1) : [];
-                    renderNextUp(nextTracks);
+                    renderNextUp(nextTracks, currentContextUri, currentTrackIndex);
                     })
                     .catch(err => console.error("Failed to fetch album info:", err));
                 })
@@ -150,28 +150,49 @@ window.onSpotifyWebPlaybackSDKReady = () => {
                     imgUrl: track.album.images?.[0]?.url || '',
                     uri: track.uri
                 }));
-                renderNextUp(nextTracks);
+                renderNextUp(nextTracks, currentContextUri, currentTrackIndex);
             });
         }).catch(err => {
             console.error("Failed to fetch player state:", err);
         });
-    });    
+    });   
 };
 
-function renderNextUp(nextTracks) {
+function renderNextUp(nextTracks, contextUri, currentTrackIndex) {
     if (!nextTracks.length) {
         nextUpList.innerHTML = "<li>No upcoming tracks</li>";
-    } else {
-        nextUpList.innerHTML = nextTracks.map(track => `
-            <li>
-                <img src="${track.imgUrl}" alt="${track.name}" class="next-up-image">
-                <div class="next-up-info">
-                    <span class="next-up-title">${track.name}</span> - 
-                    <span class="next-up-artist">${track.artists.join(', ')}</span>
-                </div>
-            </li>
-        `).join('');
+        return;
     }
+    let deviceId = localStorage.getItem('device_id');
+    nextUpList.innerHTML = nextTracks.map((track, index) => `
+        <li>
+            <img src="${track.imgUrl}" alt="${track.name}" class="next-up-image">
+            <div class="next-up-info">
+                <span class="next-up-title">${track.name}</span> - 
+                <span class="next-up-artist">${track.artists.join(', ')}</span>
+            </div>
+            <img src="imgs/play.png" alt="Play" class="next-up-play-icon control-button" 
+                data-uri="${contextUri}" data-offset="${index + currentTrackIndex + 1}">
+        </li>
+    `).join('');
+    // Add click event listeners to play buttons
+    document.querySelectorAll('.next-up-play-icon').forEach(button => {
+        button.addEventListener('click', () => {
+            const uri = button.getAttribute('data-uri');
+            const offset = button.getAttribute('data-offset');
+            fetch(`${apiUrl}/play?uri=${encodeURIComponent(uri)}&device_id=${deviceId}&offset=${offset}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "Playback started") {
+                        console.log(`Started playback from track at index ${offset}`);
+                    } else {
+                        console.error("Playback failed:", data.error);
+                    }
+                })
+                .catch(err => console.error("Failed to start playback:", err));
+            nextUpPopup.style.display = 'none';
+        });
+    });
     nextUpPopup.style.display = 'flex';
     const titleSpan = nextUpTitle.querySelector('span');
     if (titleSpan) {

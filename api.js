@@ -126,49 +126,44 @@ app.get('/nextUp', async (req, res) => {
 
 // ## PLAY ##
 app.get('/play', async (req, res) => {
-    const { uri, device_id } = req.query;
-
+    const { uri, device_id, offset } = req.query;
     if (!uri || !device_id) {
         return res.status(400).json({ error: 'Missing uri or device_id' });
     }
-  
     try {
         const [type, id] = uri.split(':').slice(1);
-  
-      if (type === "track") {
-        await spotifyApi.play({
-            device_id: device_id,
-            uris: [uri],
-            position_ms: 0
-        });
-      } else if (type === "album") {
-          const albumTracks = await spotifyApi.getAlbumTracks(id, { limit: 50 });
-          const uris = albumTracks.body.items.map(track => track.uri);
-          await spotifyApi.play({
-              device_id: device_id,
-              uris,
-              position_ms: 0
-        });
-      } else if (type === "playlist") {
-          await spotifyApi.play({
-              device_id: device_id,
-              context_uri: uri,
-              position_ms: 0
-          });
-      } else {
-          return res.status(400).json({ error: "Unsupported Spotify URI type" });
-      }
-  
-      res.json({ status: "Playback started" });
-  
-    } catch (err) {
-      console.error("Playback error:", err);
-      res.status(500).json({ error: "Playback failed", details: err.message });
+        if (type === "track") {
+            await spotifyApi.play({
+                device_id: device_id,
+                uris: [uri],
+                position_ms: 0
+            });
+        } else if (type === "album") {
+            const albumTracks = await spotifyApi.getAlbumTracks(id, { limit: 50 });
+            const uris = albumTracks.body.items.map(track => track.uri);
+            await spotifyApi.play({
+                    device_id: device_id,
+                    context_uri: uri,
+                    offset: offset ? { position: parseInt(offset) } : { position: 0 },
+                    position_ms: 0
+            });
+        } else if (type === "playlist") {
+            await spotifyApi.play({
+                device_id: device_id,
+                context_uri: uri,
+                offset: offset ? { position: parseInt(offset) } : { position: 0 },
+                position_ms: 0
+            });
+        } else {
+            return res.status(400).json({ error: "Unsupported Spotify URI type" });
+        }
+        res.json({ status: "Playback started" }); 
+        } catch (err) {
+            console.error("Playback error:", err);
+            res.status(500).json({ error: "Playback failed", details: err.message });
     }
-  });
+});
   
-
-
 // ## RFID ##
 app.get('/rfid', (req, res) => {
     exec('python3 read_rfid.py', (error, stdout, stderr) => {
@@ -176,13 +171,9 @@ app.get('/rfid', (req, res) => {
         // No card or read error
         return res.json({});
       }
-  
       const output = stdout.trim().split('\n');
       const uid = output[0];
       const spotifyUri = output[1];
-      //console.log(`Card UID: ${uid}, Spotify URI: ${spotifyUri}`);
-  
-      // Return UID and URI
       res.json({ uid, spotifyUri });
     });
   });
