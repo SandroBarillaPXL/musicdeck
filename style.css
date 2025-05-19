@@ -12,42 +12,69 @@ body {
     background-color: #1d1d1d;
     color: #f1f1f1;
     margin: 0;
+    height: 100vh; /* Ensure full viewport height */
 }
 
 #music-player {
-    width: 400px;
+    width: 100vw; /* Full width */
+    height: 100vh; /* Full height */
     background-color: #282828;
-    border-radius: 8px;
     padding: 20px;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+}
+
+#player {
+    display: flex;
+    flex: 1; /* Take remaining space above progress and controls */
+    overflow: hidden; /* Prevent overflow */
 }
 
 #album-artwork {
+    width: 50%; /* Left half of the screen */
+    height: 100%; /* Full height of the player container */
     display: flex;
     justify-content: center;
-    margin-bottom: 20px;
+    align-items: center;
+    margin-bottom: 0; /* Remove bottom margin */
 }
 
 #player-image {
     width: 100%;
-    max-width: 250px;
+    height: 100%;
+    max-width: none; /* Remove max-width to allow full scaling */
+    max-height: 100%; /* Ensure it fits within the container */
+    object-fit: contain; /* Maintain aspect ratio */
     border-radius: 8px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 #track-info {
-    text-align: center;
-    margin-bottom: 15px;
+    width: 50%; /* Right half of the screen */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start; /* Align text to the left */
+    padding: 40px; /* Increased from 30px for better spacing */
+    text-align: left; /* Override previous centering */
+    margin-bottom: 0; /* Remove bottom margin */
+}
+
+#player-album {
+    font-size: 2.2em; /* Increased from 1.8em for better readability */
+    color: #b3b3b3;
 }
 
 #player-song {
-    font-size: 1.5em;
+    font-size: 3.5em; /* Increased from 3em for better readability */
     font-weight: bold;
     color: #9000FF;
+    margin: 20px 0; /* Increased from 15px for spacing */
 }
 
 #player-artist {
-    font-size: 1em;
+    font-size: 2.2em; /* Increased from 1.8em for better readability */
     color: #b3b3b3;
 }
 
@@ -55,15 +82,21 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 15px 0;
+    margin: 0; /* Remove margin to fit between player and controls */
     color: #b3b3b3;
+    padding: 20px 0; /* Increased from 15px for better spacing */
+    width: 100%; /* Ensure it spans the full width */
+}
+
+#current-time, #duration {
+    font-size: 2em; /* Increased from 1.5em for better readability */
 }
 
 #progress-bar {
     width: 60%;
-    height: 4px;
+    height: 12px; /* Increased from 8px for easier touch interaction */
     appearance: none;
-    border-radius: 2px;
+    border-radius: 6px; /* Adjusted for the larger height */
     background-color: #b3b3b3;
     outline: none;
     cursor: pointer;
@@ -71,8 +104,8 @@ body {
 
 #progress-bar::-webkit-slider-thumb {
     appearance: none;
-    width: 8px; /* Smaller size for bullet point */
-    height: 8px;
+    width: 30px; /* Increased from 20px for easier touch */
+    height: 30px; /* Increased from 20px for easier touch */
     background-color: #9000FF;
     border-radius: 50%;
     cursor: pointer;
@@ -81,6 +114,7 @@ body {
 #progress-bar::-moz-range-progress {
     background-color: #9000FF; /* Left-side color */
 }
+
 #progress-bar::-moz-range-track {
     background-color: #b3b3b3;
 }
@@ -88,13 +122,15 @@ body {
 #controls {
     display: flex;
     justify-content: center;
-    gap: 20px;
-    margin-bottom: 15px;
+    align-items: center;
+    gap: 40px; /* Increased from 30px for better spacing between larger buttons */
+    padding: 20px 0; /* Increased from 15px for better spacing */
+    margin-bottom: 0; /* Remove bottom margin */
 }
 
 .control-button {
-    width: 40px;
-    height: 40px;
+    width: 80px; /* Increased from 60px for easier touch */
+    height: 80px; /* Increased from 60px for easier touch */
     background: none;
     border: none;
     background-size: contain;
@@ -204,7 +240,7 @@ button {
     right: 10px;
     position: fixed;
 }
-  
+
 #volume-container {
     position: relative;
     display: flex;
@@ -220,7 +256,7 @@ button {
     pointer-events: none;
     transition: opacity 0.3s ease;
     z-index: 10;
-  }
+}
 
 #volume-btn {
     background-image: url('imgs/volume.png');
