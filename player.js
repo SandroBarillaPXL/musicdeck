@@ -110,7 +110,9 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 
     volumeSlider.addEventListener('input', (e) => {
         const volume = e.target.value / 100;
+        const percent = volume * 100;
         player.setVolume(volume).catch(err => console.error('Failed to set volume:', err));
+        volumeSlider.style.background = `linear-gradient(to right, #9000FF ${percent}%, #b3b3b3 ${percent}%)`;
 
         // Reset hide timeout
         clearTimeout(volumeTimeout);
