@@ -46,7 +46,6 @@ body {
     max-height: 100%; /* Ensure it fits within the container */
     object-fit: contain; /* Maintain aspect ratio */
     border-radius: 8px;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 #track-info {
@@ -56,25 +55,25 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: flex-start; /* Align text to the left */
-    padding: 40px; /* Increased from 30px for better spacing */
+    padding: 40px;
     text-align: left; /* Override previous centering */
     margin-bottom: 0; /* Remove bottom margin */
 }
 
 #player-album {
-    font-size: 2.2em; /* Increased from 1.8em for better readability */
+    font-size: 2.2em;
     color: #b3b3b3;
 }
 
 #player-song {
-    font-size: 3.5em; /* Increased from 3em for better readability */
+    font-size: 3.5em;
     font-weight: bold;
     color: #9000FF;
-    margin: 20px 0; /* Increased from 15px for spacing */
+    margin: 20px 0;
 }
 
 #player-artist {
-    font-size: 2.2em; /* Increased from 1.8em for better readability */
+    font-size: 2.2em;
     color: #b3b3b3;
 }
 
@@ -82,21 +81,21 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0; /* Remove margin to fit between player and controls */
+    margin: 0;
     color: #b3b3b3;
-    padding: 20px 0; /* Increased from 15px for better spacing */
-    width: 100%; /* Ensure it spans the full width */
+    padding: 20px 0;
+    width: 100%;
 }
 
 #current-time, #duration {
-    font-size: 2em; /* Increased from 1.5em for better readability */
+    font-size: 2em;
 }
 
 #progress-bar {
     width: 60%;
-    height: 12px; /* Increased from 8px for easier touch interaction */
+    height: 12px;
     appearance: none;
-    border-radius: 6px; /* Adjusted for the larger height */
+    border-radius: 6px;
     background-color: #b3b3b3;
     outline: none;
     cursor: pointer;
@@ -104,15 +103,15 @@ body {
 
 #progress-bar::-webkit-slider-thumb {
     appearance: none;
-    width: 30px; /* Increased from 20px for easier touch */
-    height: 30px; /* Increased from 20px for easier touch */
+    width: 30px;
+    height: 30px;
     background-color: #9000FF;
     border-radius: 50%;
     cursor: pointer;
 }
 
 #progress-bar::-moz-range-progress {
-    background-color: #9000FF; /* Left-side color */
+    background-color: #9000FF;
 }
 
 #progress-bar::-moz-range-track {
@@ -123,14 +122,14 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 40px; /* Increased from 30px for better spacing between larger buttons */
-    padding: 20px 0; /* Increased from 15px for better spacing */
-    margin-bottom: 0; /* Remove bottom margin */
+    gap: 40px;
+    padding: 20px 0;
+    margin-bottom: 0;
 }
 
 .control-button {
-    width: 80px; /* Increased from 60px for easier touch */
-    height: 80px; /* Increased from 60px for easier touch */
+    width: 80px;
+    height: 80px;
     background: none;
     border: none;
     background-size: contain;
@@ -231,8 +230,9 @@ button {
     background: none;
     border: none;
     font-size: 2rem;
-    color: white;
+    color: gray;
     cursor: pointer;
+    font-size: 50px;
 }
 
 #open-fullscreen {
@@ -247,43 +247,67 @@ button {
     align-items: center;
 }
 
-#volume-slider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    z-index: 10;
-}
-
 #volume-btn {
     background-image: url('imgs/volume.png');
     transition: opacity 0.3s ease;
+    width: 80px;
+    height: 80px;
+}
+
+#volume-slider {
+    position: relative;
+    width: 200px;
+    height: 16px;
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.3s ease;
+    z-index: 10;
+    appearance: none;
+    border-radius: 8px;
+    background-color: #b3b3b3;
+    outline: none;
+    cursor: pointer;
+}
+
+#volume-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 40px;
+    height: 40px;
+    background-color: #9000FF;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#volume-slider::-moz-range-progress {
+    background-color: #9000FF;
+}
+
+#volume-slider::-moz-range-track {
+    background-color: #b3b3b3;
 }
 
 #next-up-popup {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 320px;
-    height: 400px;
+    top: 20px; /* Adjusted slightly for better fit */
+    left: 20px;
+    width: 620px; /* Reduced from 700px to make it smaller */
+    height: 680px; /* Reduced from 900px to make it smaller */
     background-color: #1f1f1f;
-    padding: 16px 16px 10px 16px;
+    padding: 20px; /* Reduced from 50px for better proportionality */
+    padding-bottom: 5px; /* Removed bottom padding */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    border-radius: 8px;
+    border-radius: 20px; /* Reduced from 24px */
     z-index: 1000;
-    display: none; /* Keep only this */
+    display: none;
     overflow: hidden;
     color: #f1f1f1;
-    flex-direction: column; /* Keep this for when it *is* flex */
+    flex-direction: column;
 }
 
 #next-up-title {
-    font-size: 20px;
+    font-size: 35px; /* Reduced from 72px */
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 2px; /* Reduced from 40px */
     color: #fff;
     display: flex;
     justify-content: space-between;
@@ -293,75 +317,76 @@ button {
 #next-up-close-btn {
     background: none;
     border: none;
-    color: #fff; /* White for high contrast */
-    font-size: 24px; /* Larger size */
-    font-weight: bold; /* Ensure symbol is clear */
+    color: #fff;
+    font-size: 45px; /* Reduced from 60px */
+    font-weight: bold;
     cursor: pointer;
-    padding: 4px 8px; /* More clickable area */
+    padding: 10px 20px; /* Reduced from 12px 24px */
     transition: color 0.2s, transform 0.2s;
-    line-height: 1; /* Prevent text alignment issues */
+    line-height: 1;
 }
 
 #next-up-list {
     list-style: none;
     padding: 0;
     margin: 0;
-    overflow-y: scroll; /* Ensure scrolling */
+    overflow-y: scroll;
     flex-grow: 1;
-    max-height: 300px; /* Adjust based on your design */
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on touch devices */
+    max-height: 900px; /* Reduced from 700px to fit smaller popup */
+    -webkit-overflow-scrolling: touch;
 }
 
 /* For Webkit browsers (Chrome, Safari, newer Edge) */
 #next-up-list::-webkit-scrollbar {
-    width: 50px; /* Set scrollbar width to 16px for visibility */
+    width: 50px; /* Reduced from 40px */
 }
 
 #next-up-list::-webkit-scrollbar-track {
-    background: transparent; /* Transparent track */
+    background: transparent;
 }
 
 #next-up-list::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.4); /* Light thumb color */
-    border-radius: 10px; /* Rounded corners */
-    height: 40px; /* Make the thumb bigger */
+    background-color: rgba(255, 255, 255, 0.4);
+    border-radius: 15px; /* Reduced from 20px */
+    height: 80px; /* Reduced from 100px */
 }
 
 #next-up-list::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 255, 255, 0.7); /* Darker thumb on hover */
+    background-color: rgba(255, 255, 255, 0.7);
 }
 
 #next-up-list li {
     display: flex;
     align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #333;
-    overflow-y: auto;   /* Enables scrolling */
-    max-height: 300px;  /* Set the max height to fit your design */
-    scroll-behavior: smooth;  /* Optional: makes scrolling smoother */
-    -webkit-overflow-scrolling: touch; /* For smooth scrolling on iOS */
+    padding: 20px 0; /* Reduced from 25px */
+    border-bottom: 2px solid #333; /* Reduced thickness */
+    overflow-y: auto;
+    max-height: 500px; /* Reduced from 700px to match popup */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
 }
 
-#next-up-list li img {
-    width: 50px;
-    height: 50px;
+.next-up-image {
+    width: 75px; /* Reduced from 150px */
+    height: 75px;
     object-fit: cover;
-    border-radius: 6px;
-    margin-right: 12px;
+    border-radius: 12px; /* Reduced from 16px */
+    margin-right: 30px; /* Reduced from 40px */
 }
 
-#next-up-list li .track-details {
-    display: flex;
-    flex-direction: column;
-}
-
-#next-up-list li .track-name {
-    font-size: 14px;
+.next-up-title {
+    font-size: 24px; /* Reduced from 48px */
     font-weight: bold;
     color: #f1f1f1;
 }
 
-#next-up-list li .track-artist {
-    font-size: 12px;
+.next-up-artist {
+    font-size: 24px; /* Reduced from 40px */
     color: #ccc;
+}
+
+.next-up-play-icon {
+    width: 50px; /* Reduced from 100px */
+    height: 50px;
+    margin-left: auto;
 }
