@@ -1,5 +1,5 @@
 FROM nginx:alpine
-COPY ../index.html ../player.js ../style.css ../config.js ../read_rfid.py /usr/share/nginx/html/
+COPY ../index.html ../player.js ../style.css ../config.js /usr/share/nginx/html/
 COPY ../imgs/ /usr/share/nginx/html/imgs/
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]  
