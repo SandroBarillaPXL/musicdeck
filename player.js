@@ -25,6 +25,7 @@ const fullscreenOverlay = document.getElementById('fullscreen-overlay');
 const fullscreenImage = document.getElementById('fullscreen-image');
 const volumeBtn = document.getElementById('volume-btn');
 const volumeSlider = document.getElementById('volume-slider');
+const volumeLabel = document.getElementById('volume-label');
 const nextUpOpenBtn = document.getElementById('next-up-open-btn');
 const nextUpCloseBtn = document.getElementById('next-up-close-btn');
 const nextUpList = document.getElementById('next-up-list');
@@ -110,14 +111,23 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 
     volumeSlider.addEventListener('input', (e) => {
         const volume = e.target.value / 100;
-        const percent = volume * 100;
+        const percent = Math.round(volume * 100);
         player.setVolume(volume).catch(err => console.error('Failed to set volume:', err));
         volumeSlider.style.background = `linear-gradient(to right, #9000FF ${percent}%, #b3b3b3 ${percent}%)`;
+        volumeLabel.textContent = `${percent}%`;
+        volumeLabel.style.opacity = '1';
+
+        // Update the label's position to follow the thumb
+        const thumbWidth = 40; // Thumb width from CSS
+        const sliderWidth = volumeSlider.offsetWidth - thumbWidth; // Usable width of the slider
+        const thumbPosition = (percent / 100) * sliderWidth; // Calculate thumb position
+        volumeLabel.style.left = `${thumbPosition + thumbWidth / 2}px`; // Center label over thumb
 
         // Reset hide timeout
         clearTimeout(volumeTimeout);
         volumeTimeout = setTimeout(() => {
             volumeSlider.style.display = 'none';
+            volumeLabel.style.opacity = '0';
         }, 3000);
     });
 
@@ -283,6 +293,13 @@ function showSlider() {
     volumeSlider.style.pointerEvents = 'auto';
     volumeBtn.style.opacity = '0';
     volumeBtn.style.pointerEvents = 'none';
+    volumeLabel.style.opacity = '1'; // Show the label when the slider opens
+    // Initial position update for the label
+    const percent = volumeSlider.value;
+    const thumbWidth = 40;
+    const sliderWidth = volumeSlider.offsetWidth - thumbWidth;
+    const thumbPosition = (percent / 100) * sliderWidth;
+    volumeLabel.style.left = `${thumbPosition + thumbWidth / 2}px`;
     resetVolumeTimeout();
 }
 
@@ -291,6 +308,7 @@ function hideSlider() {
     volumeSlider.style.pointerEvents = 'none';
     volumeBtn.style.opacity = '1';
     volumeBtn.style.pointerEvents = 'auto';
+    volumeLabel.style.opacity = '0'; // Hide the label when the slider hides
 }
 
 // FUNCTIONS -- UX
