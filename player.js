@@ -7,6 +7,7 @@ let polling = false;
 let trackDuration = 0;
 let playerInfoHidden = false;
 let volumeTimeout = null;
+let currentTrackUri = null;
 
 // DOM elements
 const seekBar = document.getElementById('progress-bar');
@@ -39,12 +40,13 @@ const token = params.get('access_token');
 
 if (token) {
     localStorage.setItem('spotifyAccessToken', token);
-    window.history.replaceState({}, document.title, "/"); // Clean URL
+    window.history.replaceState({}, document.title, "/")
 }
 
 window.onload = () => {
     const storedToken = localStorage.getItem('spotifyAccessToken');
     if (!storedToken) window.location = `${apiUrl}/login`;
+    hidePlayerUi();
 };
 
 window.onSpotifyWebPlaybackSDKReady = () => {
@@ -63,9 +65,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     player.addListener('ready', ({ device_id }) => {
         console.log('Ready with Device ID', device_id);
         localStorage.setItem('device_id', device_id);
-
-        // Start polling for RFID card after player is ready
-        setInterval(() => readRfidCard(player, device_id), 250);
+        setInterval(() => readRfidCard(player, device_id), 100);
         hidePlayerUi();
     });
 
@@ -79,15 +79,33 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 
     player.addListener('player_state_changed', (state) => {
         if (!state || playerInfoHidden) return;
-
         const currentTrack = state.track_window.current_track;
         trackDuration = currentTrack.duration_ms;
-        playerAlbum.innerText = currentTrack.album.name;
-        playerSong.innerText = currentTrack.name;
-        playerArtist.innerText = currentTrack.artists.map(artist => artist.name).join(', ');
-        playerImage.src = currentTrack.album.images[0].url;
-        durationTime.innerText = formatTime(trackDuration);
-        fullscreenImage.src = currentTrack.album.images[0].url;
+        const newTrackUri = currentTrack.uri;
+        if (newTrackUri !== currentTrackUri) {
+            currentTrackUri = newTrackUri;
+            playerAlbum.classList.remove('visible');
+            playerSong.classList.remove('visible');
+            playerArtist.classList.remove('visible');
+            setTimeout(() => {
+                playerAlbum.innerText = currentTrack.album.name;
+                playerSong.innerText = currentTrack.name;
+                playerArtist.innerText = currentTrack.artists.map(artist => artist.name).join(', ');
+                playerAlbum.classList.add('visible');
+                playerSong.classList.add('visible');
+                playerArtist.classList.add('visible');
+            }, 300);
+            const albumArtwork = document.getElementById('album-artwork');
+            if (playerImage.src !== currentTrack.album.images[0].url) {
+                albumArtwork.classList.add('hidden');
+                setTimeout(() => {
+                    playerImage.src = currentTrack.album.images[0].url;
+                    albumArtwork.classList.remove('hidden'); 
+                }, 300); 
+            }
+            durationTime.innerText = formatTime(trackDuration);
+            fullscreenImage.src = currentTrack.album.images[0].url;
+        }
         updateSeekBar(state.position, trackDuration);
         updatePlayButton(state.paused);
     });
@@ -116,18 +134,13 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         volumeSlider.style.background = `linear-gradient(to right, #9000FF ${percent}%, #b3b3b3 ${percent}%)`;
         volumeLabel.textContent = `${percent}%`;
         volumeLabel.style.opacity = '1';
-
-        // Update the label's position to follow the thumb
-        const thumbWidth = 40; // Thumb width from CSS
-        const sliderWidth = volumeSlider.offsetWidth - thumbWidth; // Usable width of the slider
-        const thumbPosition = (percent / 100) * sliderWidth; // Calculate thumb position
-        volumeLabel.style.left = `${thumbPosition + thumbWidth / 2}px`; // Center label over thumb
-
-        // Reset hide timeout
+        const thumbWidth = 40;
+        const sliderWidth = volumeSlider.offsetWidth - thumbWidth;
+        const thumbPosition = (percent / 100) * sliderWidth;
+        volumeLabel.style.left = `${thumbPosition + thumbWidth / 2}px`;
         clearTimeout(volumeTimeout);
         volumeTimeout = setTimeout(() => {
-            volumeSlider.style.display = 'none';
-            volumeLabel.style.opacity = '0';
+            hideSlider();
         }, 3000);
     });
 
@@ -184,7 +197,7 @@ function readRfidCard(player, deviceId) {
             if (!uid && lastUid !== null) {
                 console.log("Card removed");
                 lastUid = null;
-                playerInfoHidden = true; // Prevent future UI updates
+                playerInfoHidden = true;
                 player.pause();
                 hidePlayerUi();
                 return;
@@ -193,7 +206,7 @@ function readRfidCard(player, deviceId) {
             if (uid !== lastUid && spotifyUri?.startsWith('spotify:')) {
                 console.log("New card detected!", uid);
                 lastUid = uid;
-                playerInfoHidden = false; // Re-enable UI updates
+                playerInfoHidden = false;
                 fetch(`${apiUrl}/play?uri=${encodeURIComponent(spotifyUri)}&device_id=${deviceId}`);
                 showPlayerUi();
             }
@@ -223,7 +236,6 @@ function renderNextUp(nextTracks, contextUri, currentTrackIndex) {
                 data-uri="${contextUri}" data-offset="${index + currentTrackIndex + 1}">
         </li>
     `).join('');
-    // Add click event listeners to play buttons
     document.querySelectorAll('.next-up-play-icon').forEach(button => {
         button.addEventListener('click', () => {
             const uri = button.getAttribute('data-uri');
@@ -238,12 +250,10 @@ function renderNextUp(nextTracks, contextUri, currentTrackIndex) {
                     }
                 })
                 .catch(err => console.error("Failed to start playback:", err));
-            // Fade out the popup
             nextUpPopup.style.opacity = '0';
             nextUpPopup.style.pointerEvents = 'none';
         });
     });
-    // Fade in the popup
     nextUpPopup.style.opacity = '1';
     nextUpPopup.style.pointerEvents = 'auto';
     const titleSpan = nextUpTitle.querySelector('span');
@@ -254,9 +264,16 @@ function renderNextUp(nextTracks, contextUri, currentTrackIndex) {
 
 // Functions -- UI
 function hidePlayerUi() {
-    playerSong.innerText = "No song playing";
-    playerArtist.innerText = "Insert a card to play";
-    playerAlbum.innerText = "";
+    playerAlbum.classList.remove('visible');
+    playerSong.classList.remove('visible');
+    playerArtist.classList.remove('visible');
+    setTimeout(() => {
+        playerSong.innerText = "No song playing";
+        playerArtist.innerText = "Insert a coin to play";
+        playerAlbum.innerText = "";
+        playerSong.classList.add('visible');
+        playerArtist.classList.add('visible');
+    }, 300);
     nextBtn.style.display = "none";
     previousBtn.style.display = "none";
     togglePlayBtn.style.display = "none";
@@ -264,15 +281,22 @@ function hidePlayerUi() {
     seekBar.style.display = "none";
     currentTime.style.display = "none";
     durationTime.style.display = "none";
-    playerImage.src = "imgs/icon.png";
+    const albumArtwork = document.getElementById('album-artwork');
+    albumArtwork.classList.add('hidden');
+    setTimeout(() => {
+        playerImage.src = "imgs/icon.png";
+        albumArtwork.classList.remove('hidden');
+    }, 300);
+    
     fullscreenImage.src = 'imgs/icon.png';
-    nextUpPopup.style.opacity = '0'; // Ensure it fades out
+    nextUpPopup.style.opacity = '0';
     nextUpPopup.style.pointerEvents = 'none';
     nextUpOpenBtn.style.display = 'none';
-    fullscreenOverlay.style.opacity = '0'; // Ensure fullscreen fades out
+    fullscreenOverlay.style.opacity = '0';
     fullscreenOverlay.style.pointerEvents = 'none';
-    openFullscreenBtn.style.opacity = '1'; // Ensure the button is visible
+    openFullscreenBtn.style.opacity = '1';
     openFullscreenBtn.style.pointerEvents = 'auto';
+    currentTrackUri = null;
 }
 
 function showPlayerUi() {
@@ -306,8 +330,7 @@ function showSlider() {
     volumeSlider.style.pointerEvents = 'auto';
     volumeBtn.style.opacity = '0';
     volumeBtn.style.pointerEvents = 'none';
-    volumeLabel.style.opacity = '1'; // Show the label when the slider opens
-    // Initial position update for the label
+    volumeLabel.style.opacity = '1';
     const percent = volumeSlider.value;
     const thumbWidth = 40;
     const sliderWidth = volumeSlider.offsetWidth - thumbWidth;
@@ -321,7 +344,7 @@ function hideSlider() {
     volumeSlider.style.pointerEvents = 'none';
     volumeBtn.style.opacity = '1';
     volumeBtn.style.pointerEvents = 'auto';
-    volumeLabel.style.opacity = '0'; // Hide the label when the slider hides
+    volumeLabel.style.opacity = '0';
 }
 
 function hideNextUp() {
