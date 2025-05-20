@@ -8,6 +8,9 @@ let trackDuration = 0;
 let playerInfoHidden = false;
 let volumeTimeout = null;
 let currentTrackUri = null;
+let nextUpTracks = [];
+let nextUpContextUri = '';
+let nextUpCurrentTrackIndex = 0;
 
 // DOM elements
 const seekBar = document.getElementById('progress-bar');
@@ -100,12 +103,47 @@ window.onSpotifyWebPlaybackSDKReady = () => {
                 albumArtwork.classList.add('hidden');
                 setTimeout(() => {
                     playerImage.src = currentTrack.album.images[0].url;
-                    albumArtwork.classList.remove('hidden'); 
-                }, 300); 
+                    albumArtwork.classList.remove('hidden');
+                }, 300);
             }
             durationTime.innerText = formatTime(trackDuration);
             fullscreenImage.src = currentTrack.album.images[0].url;
-        }
+            // ✅ Pre-fetch Next Up queue
+            player.getCurrentState().then(state => {
+                if (!state || !state.context?.uri) return;
+
+                const currentTrackUri = state.track_window.current_track.uri;
+                const contextUri = state.context.uri;
+
+                fetch(`${apiUrl}/rfid`)
+                    .then(res => res.json())
+                    .then(rfidData => {
+                        const currentAlbumUri = rfidData.spotifyUri;
+                        return fetch(`${apiUrl}/nextUp?uri=${encodeURIComponent(currentAlbumUri)}`);
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        const allTracks = data.albumInfo;
+                        const index = allTracks.findIndex(track => track.uri === currentTrackUri);
+                        nextUpTracks = index >= 0 ? allTracks.slice(index + 1) : [];
+                        nextUpContextUri = contextUri;
+                        nextUpCurrentTrackIndex = index;
+                    })
+                    .catch(err => {
+                        console.warn("Failed to prefetch next-up list. Falling back to Spotify state.", err);
+                        if (state?.track_window?.next_tracks) {
+                            nextUpTracks = state.track_window.next_tracks.map(track => ({
+                                name: track.name,
+                                artists: track.artists.map(a => a.name),
+                                imgUrl: track.album.images?.[0]?.url || '',
+                                uri: track.uri
+                            }));
+                            nextUpContextUri = contextUri;
+                            nextUpCurrentTrackIndex = 0;
+                        }
+                    });
+                });
+            }
         updateSeekBar(state.position, trackDuration);
         updatePlayButton(state.paused);
     });
@@ -145,41 +183,9 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     });
 
     nextUpOpenBtn.addEventListener('click', () => {
-        player.getCurrentState().then(state => {
-            if (!state) {
-                console.error("No player state available.");
-                return;
-            }
-            const currentTrackUri = state.track_window.current_track.uri;
-            const currentContextUri = state.context.uri;
-            fetch(`${apiUrl}/rfid`)
-                .then(res => res.json())
-                .then(rfidData => {
-                    const currentAlbumUri = rfidData.spotifyUri;
-                    fetch(`${apiUrl}/nextUp?uri=${encodeURIComponent(currentAlbumUri)}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            const allTracks = data.albumInfo;
-                            const currentTrackIndex = allTracks.findIndex(track => track.uri === currentTrackUri);
-                            const nextTracks = currentTrackIndex >= 0 ? allTracks.slice(currentTrackIndex + 1) : [];
-                            renderNextUp(nextTracks, currentContextUri, currentTrackIndex);
-                        })
-                        .catch(err => console.error("Failed to fetch album info:", err));
-                })
-                .catch(err => {
-                    console.warn("RFID fetch failed, falling back to next_tracks:", err);
-                    const nextTracks = state.track_window.next_tracks.map(track => ({
-                        name: track.name,
-                        artists: track.artists.map(artist => artist.name),
-                        imgUrl: track.album.images?.[0]?.url || '',
-                        uri: track.uri
-                    }));
-                    renderNextUp(nextTracks, currentContextUri, currentTrackIndex);
-                });
-        }).catch(err => {
-            console.error("Failed to fetch player state:", err);
-        });
+        renderNextUp(nextUpTracks, nextUpContextUri, nextUpCurrentTrackIndex);
     });
+
 };
 
 
