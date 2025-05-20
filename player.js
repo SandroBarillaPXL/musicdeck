@@ -49,7 +49,7 @@ if (token) {
 window.onload = () => {
     const storedToken = localStorage.getItem('spotifyAccessToken');
     if (!storedToken) window.location = `${apiUrl}/login`;
-    hidePlayerUi();
+    togglePLayerUi(false);
 };
 
 window.onSpotifyWebPlaybackSDKReady = () => {
@@ -69,7 +69,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         console.log('Ready with Device ID', device_id);
         localStorage.setItem('device_id', device_id);
         setInterval(() => readRfidCard(player, device_id), 100);
-        hidePlayerUi();
+        togglePlayerUi(false);
     });
 
     player.addListener('not_ready', ({ device_id }) => {
@@ -108,7 +108,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
             }
             durationTime.innerText = formatTime(trackDuration);
             fullscreenImage.src = currentTrack.album.images[0].url;
-            // ✅ Pre-fetch Next Up queue
+            // Pre-fetch Next Up queue
             player.getCurrentState().then(state => {
                 if (!state || !state.context?.uri) return;
 
@@ -178,7 +178,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         volumeLabel.style.left = `${thumbPosition + thumbWidth / 2}px`;
         clearTimeout(volumeTimeout);
         volumeTimeout = setTimeout(() => {
-            hideSlider();
+            toggleVolumeSlider(false);
         }, 3000);
     });
 
@@ -205,7 +205,7 @@ function readRfidCard(player, deviceId) {
                 lastUid = null;
                 playerInfoHidden = true;
                 player.pause();
-                hidePlayerUi();
+                togglePlayerUi(false);
                 return;
             }
 
@@ -214,7 +214,7 @@ function readRfidCard(player, deviceId) {
                 lastUid = uid;
                 playerInfoHidden = false;
                 fetch(`${apiUrl}/play?uri=${encodeURIComponent(spotifyUri)}&device_id=${deviceId}`);
-                showPlayerUi();
+                togglePlayerUi(true);
             }
         })
         .catch(err => {
@@ -269,93 +269,68 @@ function renderNextUp(nextTracks, contextUri, currentTrackIndex) {
 }
 
 // Functions -- UI
-function hidePlayerUi() {
-    playerAlbum.classList.remove('visible');
-    playerSong.classList.remove('visible');
-    playerArtist.classList.remove('visible');
-    setTimeout(() => {
+function togglePlayerUi(show) {
+    const visible = show ? 'block' : 'none';
+    nextBtn.style.display = visible;
+    previousBtn.style.display = visible;
+    togglePlayBtn.style.display = visible;
+    volumeBtn.style.display = visible;
+    seekBar.style.display = visible;
+    currentTime.style.display = visible;
+    durationTime.style.display = visible;
+    nextUpOpenBtn.style.display = visible;
+    const albumArtwork = document.getElementById('album-artwork');
+    if (show) {
+        albumArtwork.classList.remove('hidden');
+    } else {
+        // Hide song text for fade-out effect
+        playerAlbum.classList.remove('visible');
+        playerSong.classList.remove('visible');
+        playerArtist.classList.remove('visible');
+        // Reset placeholder content and images immediately
         playerSong.innerText = "No song playing";
         playerArtist.innerText = "Insert a coin to play";
         playerAlbum.innerText = "";
+        playerImage.src = "imgs/icon.png";
+        fullscreenImage.src = "imgs/icon.png";
+        // Fade text back in
         playerSong.classList.add('visible');
         playerArtist.classList.add('visible');
-    }, 300);
-    nextBtn.style.display = "none";
-    previousBtn.style.display = "none";
-    togglePlayBtn.style.display = "none";
-    volumeBtn.style.display = "none";
-    seekBar.style.display = "none";
-    currentTime.style.display = "none";
-    durationTime.style.display = "none";
-    const albumArtwork = document.getElementById('album-artwork');
-    albumArtwork.classList.add('hidden');
-    setTimeout(() => {
-        playerImage.src = "imgs/icon.png";
         albumArtwork.classList.remove('hidden');
-    }, 300);
-    
-    fullscreenImage.src = 'imgs/icon.png';
-    nextUpPopup.style.opacity = '0';
-    nextUpPopup.style.pointerEvents = 'none';
-    nextUpOpenBtn.style.display = 'none';
-    fullscreenOverlay.style.opacity = '0';
-    fullscreenOverlay.style.pointerEvents = 'none';
-    openFullscreenBtn.style.opacity = '1';
-    openFullscreenBtn.style.pointerEvents = 'auto';
-    currentTrackUri = null;
+    }
 }
 
-function showPlayerUi() {
-    nextBtn.style.display = "block";
-    previousBtn.style.display = "block";
-    togglePlayBtn.style.display = "block";
-    volumeBtn.style.display = "block";
-    seekBar.style.display = "block";
-    currentTime.style.display = "block";
-    durationTime.style.display = "block";
-    nextUpOpenBtn.style.display = "block";
+
+function toggleFullScreen(open) {
+    fullscreenOverlay.style.opacity = open ? '1' : '0';
+    fullscreenOverlay.style.pointerEvents = open ? 'auto' : 'none';
+    openFullscreenBtn.style.opacity = open ? '0' : '1';
+    openFullscreenBtn.style.pointerEvents = open ? 'none' : 'auto';
+    if (open) {
+        fullscreenImage.src = playerImage.src;
+    }
 }
 
-function openFullScreen() {
-    fullscreenOverlay.style.opacity = '1';
-    fullscreenOverlay.style.pointerEvents = 'auto';
-    fullscreenImage.src = playerImage.src;
-    openFullscreenBtn.style.opacity = '0';
-    openFullscreenBtn.style.pointerEvents = 'none';
+function toggleVolumeSlider(show) {
+    volumeSlider.style.opacity = show ? '1' : '0';
+    volumeSlider.style.pointerEvents = show ? 'auto' : 'none';
+    volumeBtn.style.opacity = show ? '0' : '1';
+    volumeBtn.style.pointerEvents = show ? 'none' : 'auto';
+    volumeLabel.style.opacity = show ? '1' : '0';
+
+    if (show) {
+        const percent = volumeSlider.value;
+        const thumbWidth = 40;
+        const sliderWidth = volumeSlider.offsetWidth - thumbWidth;
+        const thumbPosition = (percent / 100) * sliderWidth;
+        volumeLabel.style.left = `${thumbPosition + thumbWidth / 2}px`;
+        resetVolumeTimeout();
+    }
 }
 
-function closeFullScreen() {
-    fullscreenOverlay.style.opacity = '0';
-    fullscreenOverlay.style.pointerEvents = 'none';
-    openFullscreenBtn.style.opacity = '1';
-    openFullscreenBtn.style.pointerEvents = 'auto';
-}
-
-function showSlider() {
-    volumeSlider.style.opacity = '1';
-    volumeSlider.style.pointerEvents = 'auto';
-    volumeBtn.style.opacity = '0';
-    volumeBtn.style.pointerEvents = 'none';
-    volumeLabel.style.opacity = '1';
-    const percent = volumeSlider.value;
-    const thumbWidth = 40;
-    const sliderWidth = volumeSlider.offsetWidth - thumbWidth;
-    const thumbPosition = (percent / 100) * sliderWidth;
-    volumeLabel.style.left = `${thumbPosition + thumbWidth / 2}px`;
-    resetVolumeTimeout();
-}
-
-function hideSlider() {
-    volumeSlider.style.opacity = '0';
-    volumeSlider.style.pointerEvents = 'none';
-    volumeBtn.style.opacity = '1';
-    volumeBtn.style.pointerEvents = 'auto';
-    volumeLabel.style.opacity = '0';
-}
-
-function hideNextUp() {
-    nextUpPopup.style.opacity = '0';
-    nextUpPopup.style.pointerEvents = 'none';
+function toggleNextUp(show) {
+    nextUpPopup.style.opacity = show ? '1' : '0';
+    nextUpPopup.style.pointerEvents = show ? 'auto' : 'none';
 }
 
 // FUNCTIONS -- UX
@@ -380,15 +355,15 @@ function formatTime(ms) {
 function resetVolumeTimeout() {
     clearTimeout(volumeTimeout);
     volumeTimeout = setTimeout(() => {
-        hideSlider();
+        toggleVolumeSlider(false);
     }, 3000);
 }
 
 // Add event listeners
-openFullscreenBtn.addEventListener('click', openFullScreen);
-closeFullscreenBtn.addEventListener('click', closeFullScreen);
-volumeBtn.addEventListener('click', showSlider);
+openFullscreenBtn.addEventListener('click', () => toggleFullScreen(true));
+closeFullscreenBtn.addEventListener('click', () => toggleFullScreen(false));
+volumeBtn.addEventListener('click', () => toggleVolumeSlider(true));
 volumeSlider.addEventListener('input', resetVolumeTimeout);
 volumeSlider.addEventListener('pointerdown', resetVolumeTimeout);
 volumeSlider.addEventListener('pointerup', resetVolumeTimeout);
-nextUpCloseBtn.addEventListener('click', hideNextUp);
+nextUpCloseBtn.addEventListener('click', () => toggleNextUp(false));
