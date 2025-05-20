@@ -11,6 +11,7 @@ let currentTrackUri = null;
 let nextUpTracks = [];
 let nextUpContextUri = '';
 let nextUpCurrentTrackIndex = 0;
+const startVolume = 0.5;
 
 // DOM elements
 const seekBar = document.getElementById('progress-bar');
@@ -62,7 +63,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     const player = new Spotify.Player({
         name: 'Music Deck',
         getOAuthToken: cb => cb(storedToken),
-        volume: 0.5
+        volume: startVolume
     });
 
     player.addListener('ready', ({ device_id }) => {
@@ -70,6 +71,8 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         localStorage.setItem('device_id', device_id);
         setInterval(() => readRfidCard(player, device_id), 100);
         togglePlayerUi(false);
+        let percent = Math.round(startVolume * 100);
+        volumeSlider.style.background = `linear-gradient(to right, #9000FF ${percent}%, #b3b3b3 ${percent}%)`;
     });
 
     player.addListener('not_ready', ({ device_id }) => {
