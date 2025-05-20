@@ -211,11 +211,14 @@ button {
     width: 100vw;
     height: 100vh;
     background-color: black;
-    display: none;
+    display: flex; /* Ensure flex is always set for layout */
     justify-content: center;
     align-items: center;
     z-index: 9999;
     flex-direction: column;
+    opacity: 0; /* Initially hidden */
+    pointer-events: none; /* Initially non-interactive */
+    transition: opacity 0.3s ease; /* Fade transition */
 }
 
 #fullscreen-overlay img {
@@ -241,6 +244,9 @@ button {
     top: 10px;
     right: 10px;
     position: fixed;
+    opacity: 1; /* Initially visible */
+    pointer-events: auto;
+    transition: opacity 0.3s ease; /* Smooth fade for the button */
 }
 
 #volume-container {
@@ -326,20 +332,22 @@ button {
 
 #next-up-popup {
     position: fixed;
-    top: 20px; /* Adjusted slightly for better fit */
+    top: 20px;
     left: 20px;
-    width: 620px; /* Reduced from 700px to make it smaller */
-    height: 680px; /* Reduced from 900px to make it smaller */
+    width: 620px;
+    height: 680px;
     background-color: #1f1f1f;
-    padding: 20px; /* Reduced from 50px for better proportionality */
-    padding-bottom: 5px; /* Removed bottom padding */
+    padding: 20px;
+    padding-bottom: 5px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    border-radius: 20px; /* Reduced from 24px */
+    border-radius: 20px;
     z-index: 1000;
-    display: none;
-    overflow: hidden;
-    color: #f1f1f1;
+    display: flex; /* Ensure flex is always set for layout */
     flex-direction: column;
+    opacity: 0; /* Initially hidden */
+    pointer-events: none; /* Initially non-interactive */
+    transition: opacity 0.3s ease; /* Fade transition */
+    color: #f1f1f1;
 }
 
 #next-up-title {

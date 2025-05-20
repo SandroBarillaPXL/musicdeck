@@ -140,35 +140,33 @@ window.onSpotifyWebPlaybackSDKReady = () => {
             const currentTrackUri = state.track_window.current_track.uri;
             const currentContextUri = state.context.uri;
             fetch(`${apiUrl}/rfid`)
-            .then(res => res.json())
-            .then(rfidData => {
-                const currentAlbumUri = rfidData.spotifyUri;
-                
-                fetch(`${apiUrl}/nextUp?uri=${encodeURIComponent(currentAlbumUri)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                    const allTracks = data.albumInfo;
-                    const currentTrackIndex = allTracks.findIndex(track => track.uri === currentTrackUri);
-                    const index = allTracks.findIndex(track => track.uri === currentTrackUri);
-                    const nextTracks = index >= 0 ? allTracks.slice(index + 1) : [];
-                    renderNextUp(nextTracks, currentContextUri, currentTrackIndex);
-                    })
-                    .catch(err => console.error("Failed to fetch album info:", err));
+                .then(res => res.json())
+                .then(rfidData => {
+                    const currentAlbumUri = rfidData.spotifyUri;
+                    fetch(`${apiUrl}/nextUp?uri=${encodeURIComponent(currentAlbumUri)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const allTracks = data.albumInfo;
+                            const currentTrackIndex = allTracks.findIndex(track => track.uri === currentTrackUri);
+                            const nextTracks = currentTrackIndex >= 0 ? allTracks.slice(currentTrackIndex + 1) : [];
+                            renderNextUp(nextTracks, currentContextUri, currentTrackIndex);
+                        })
+                        .catch(err => console.error("Failed to fetch album info:", err));
                 })
-            .catch(err => {
-                console.warn("RFID fetch failed, falling back to next_tracks.");
-                const nextTracks = state.track_window.next_tracks.map(track => ({
-                    name: track.name,
-                    artists: track.artists.map(artist => artist.name),
-                    imgUrl: track.album.images?.[0]?.url || '',
-                    uri: track.uri
-                }));
-                renderNextUp(nextTracks, currentContextUri, currentTrackIndex);
-            });
+                .catch(err => {
+                    console.warn("RFID fetch failed, falling back to next_tracks:", err);
+                    const nextTracks = state.track_window.next_tracks.map(track => ({
+                        name: track.name,
+                        artists: track.artists.map(artist => artist.name),
+                        imgUrl: track.album.images?.[0]?.url || '',
+                        uri: track.uri
+                    }));
+                    renderNextUp(nextTracks, currentContextUri, currentTrackIndex);
+                });
         }).catch(err => {
             console.error("Failed to fetch player state:", err);
         });
-    });   
+    });
 };
 
 
@@ -209,6 +207,8 @@ function readRfidCard(player, deviceId) {
 function renderNextUp(nextTracks, contextUri, currentTrackIndex) {
     if (!nextTracks.length) {
         nextUpList.innerHTML = "<li>No upcoming tracks</li>";
+        nextUpPopup.style.opacity = '1';
+        nextUpPopup.style.pointerEvents = 'auto';
         return;
     }
     let deviceId = localStorage.getItem('device_id');
@@ -238,10 +238,14 @@ function renderNextUp(nextTracks, contextUri, currentTrackIndex) {
                     }
                 })
                 .catch(err => console.error("Failed to start playback:", err));
-            nextUpPopup.style.display = 'none';
+            // Fade out the popup
+            nextUpPopup.style.opacity = '0';
+            nextUpPopup.style.pointerEvents = 'none';
         });
     });
-    nextUpPopup.style.display = 'flex';
+    // Fade in the popup
+    nextUpPopup.style.opacity = '1';
+    nextUpPopup.style.pointerEvents = 'auto';
     const titleSpan = nextUpTitle.querySelector('span');
     if (titleSpan) {
         titleSpan.innerText = "Next Up";
@@ -262,8 +266,13 @@ function hidePlayerUi() {
     durationTime.style.display = "none";
     playerImage.src = "imgs/icon.png";
     fullscreenImage.src = 'imgs/icon.png';
-    nextUpPopup.style.display = 'none';
+    nextUpPopup.style.opacity = '0'; // Ensure it fades out
+    nextUpPopup.style.pointerEvents = 'none';
     nextUpOpenBtn.style.display = 'none';
+    fullscreenOverlay.style.opacity = '0'; // Ensure fullscreen fades out
+    fullscreenOverlay.style.pointerEvents = 'none';
+    openFullscreenBtn.style.opacity = '1'; // Ensure the button is visible
+    openFullscreenBtn.style.pointerEvents = 'auto';
 }
 
 function showPlayerUi() {
@@ -278,14 +287,18 @@ function showPlayerUi() {
 }
 
 function openFullScreen() {
-    fullscreenOverlay.style.display = 'flex';
+    fullscreenOverlay.style.opacity = '1';
+    fullscreenOverlay.style.pointerEvents = 'auto';
     fullscreenImage.src = playerImage.src;
-    openFullscreenBtn.style.display = 'none';
+    openFullscreenBtn.style.opacity = '0';
+    openFullscreenBtn.style.pointerEvents = 'none';
 }
 
 function closeFullScreen() {
-    fullscreenOverlay.style.display = 'none';
-    openFullscreenBtn.style.display = 'block';
+    fullscreenOverlay.style.opacity = '0';
+    fullscreenOverlay.style.pointerEvents = 'none';
+    openFullscreenBtn.style.opacity = '1';
+    openFullscreenBtn.style.pointerEvents = 'auto';
 }
 
 function showSlider() {
@@ -309,6 +322,11 @@ function hideSlider() {
     volumeBtn.style.opacity = '1';
     volumeBtn.style.pointerEvents = 'auto';
     volumeLabel.style.opacity = '0'; // Hide the label when the slider hides
+}
+
+function hideNextUp() {
+    nextUpPopup.style.opacity = '0';
+    nextUpPopup.style.pointerEvents = 'none';
 }
 
 // FUNCTIONS -- UX
@@ -344,4 +362,4 @@ volumeBtn.addEventListener('click', showSlider);
 volumeSlider.addEventListener('input', resetVolumeTimeout);
 volumeSlider.addEventListener('pointerdown', resetVolumeTimeout);
 volumeSlider.addEventListener('pointerup', resetVolumeTimeout);
-nextUpCloseBtn.addEventListener('click', () => {nextUpPopup.style.display = 'none';});
+nextUpCloseBtn.addEventListener('click', hideNextUp);
