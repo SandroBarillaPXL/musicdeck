@@ -29,3 +29,4 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USER }}/musicdeck:pi-fe
           file: ./docker/Dockerfile-fe
+          platforms: linux/arm64
