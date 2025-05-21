@@ -211,6 +211,7 @@ function readRfidCard(player, deviceId) {
                     playerInfoHidden = true;
                     player.pause().catch(err => console.error("Pause failed:", err));
                     togglePlayerUi(false);
+                    toggleFullScreen(false)
                     currentTrackUri = null;
                     nextUpTracks = [];
                     nextUpContextUri = '';
@@ -309,7 +310,6 @@ function togglePlayerUi(show) {
         playerArtist.innerText = "Insert a coin to play";
         playerAlbum.innerText = "";
         playerImage.src = "imgs/icon.png";
-        fullscreenImage.src = "imgs/icon.png";
         // Fade text back in
         playerSong.classList.add('visible');
         playerArtist.classList.add('visible');
