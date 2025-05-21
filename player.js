@@ -36,6 +36,8 @@ const nextUpCloseBtn = document.getElementById('next-up-close-btn');
 const nextUpList = document.getElementById('next-up-list');
 const nextUpTitle = document.getElementById('next-up-title');
 const nextUpPopup = document.getElementById('next-up-popup');
+const logoPlaceholder = document.getElementById('logo-placeholder');
+const albumArtwork = document.getElementById('album-artwork');
 
 // Auth: Clear any old token and extract new one from URL
 localStorage.removeItem('spotifyAccessToken');
@@ -282,8 +284,8 @@ function togglePlayerUi(show) {
     currentTime.style.display = visible;
     durationTime.style.display = visible;
     nextUpOpenBtn.style.display = visible;
-    const albumArtwork = document.getElementById('album-artwork');
     if (show) {
+        logoPlaceholder.classList.remove('visible');
         albumArtwork.classList.remove('hidden');
     } else {
         // Hide song text for fade-out effect
@@ -300,9 +302,9 @@ function togglePlayerUi(show) {
         playerSong.classList.add('visible');
         playerArtist.classList.add('visible');
         albumArtwork.classList.remove('hidden');
+        logoPlaceholder.classList.add('visible');
     }
 }
-
 
 function toggleFullScreen(open) {
     fullscreenOverlay.style.opacity = open ? '1' : '0';
