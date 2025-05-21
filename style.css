@@ -21,7 +21,7 @@ body {
 #music-player {
     width: 100vw;
     height: 100vh; 
-    background-color: #282828;
+    background: linear-gradient(to bottom, #1d1d1d, #464646);
     padding: 20px;
     display: flex;
     flex-direction: column;
