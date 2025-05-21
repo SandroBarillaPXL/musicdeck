@@ -1,0 +1,17 @@
+[Unit]
+Description=Kiosk Mode Chromium Launcher
+After=graphical.target
+Wants=graphical.target
+
+[Service]
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/sandro/.Xauthority
+User=sandro
+Group=sandro
+ExecStart=/bin/bash /home/sandro/kiosk.sh
+Restart=on-failure
+RestartSec=5s
+Type=simple
+
+[Install]
+WantedBy=graphical.target
