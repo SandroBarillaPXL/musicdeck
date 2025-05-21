@@ -71,7 +71,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     player.addListener('ready', ({ device_id }) => {
         console.log('Ready with Device ID', device_id);
         localStorage.setItem('device_id', device_id);
-        setInterval(() => readRfidCard(player, device_id), 100);
+        setInterval(() => readRfidCard(player, device_id), 500);
         togglePlayerUi(false);
         let percent = Math.round(startVolume * 100);
         volumeSlider.style.background = `linear-gradient(to right, #9000FF ${percent}%, #b3b3b3 ${percent}%)`;
@@ -90,67 +90,59 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         const currentTrack = state.track_window.current_track;
         trackDuration = currentTrack.duration_ms;
         const newTrackUri = currentTrack.uri;
-        if (newTrackUri !== currentTrackUri) {
-            currentTrackUri = newTrackUri;
-            playerAlbum.classList.remove('visible');
-            playerSong.classList.remove('visible');
-            playerArtist.classList.remove('visible');
-            setTimeout(() => {
-                playerAlbum.innerText = currentTrack.album.name;
-                playerSong.innerText = currentTrack.name;
-                playerArtist.innerText = currentTrack.artists.map(artist => artist.name).join(', ');
-                playerAlbum.classList.add('visible');
-                playerSong.classList.add('visible');
-                playerArtist.classList.add('visible');
-            }, 300);
-            const albumArtwork = document.getElementById('album-artwork');
-            if (playerImage.src !== currentTrack.album.images[0].url) {
-                albumArtwork.classList.add('hidden');
-                setTimeout(() => {
-                    playerImage.src = currentTrack.album.images[0].url;
-                    albumArtwork.classList.remove('hidden');
-                }, 300);
-            }
-            durationTime.innerText = formatTime(trackDuration);
-            fullscreenImage.src = currentTrack.album.images[0].url;
-            // Pre-fetch Next Up queue
-            player.getCurrentState().then(state => {
-                if (!state || !state.context?.uri) return;
-
-                const currentTrackUri = state.track_window.current_track.uri;
-                const contextUri = state.context.uri;
-
-                fetch(`${apiUrl}/rfid`)
-                    .then(res => res.json())
-                    .then(rfidData => {
-                        const currentAlbumUri = rfidData.spotifyUri;
-                        return fetch(`${apiUrl}/nextUp?uri=${encodeURIComponent(currentAlbumUri)}`);
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        const allTracks = data.albumInfo;
-                        const index = allTracks.findIndex(track => track.uri === currentTrackUri);
-                        nextUpTracks = index >= 0 ? allTracks.slice(index + 1) : [];
-                        nextUpContextUri = contextUri;
-                        nextUpCurrentTrackIndex = index;
-                    })
-                    .catch(err => {
-                        console.warn("Failed to prefetch next-up list. Falling back to Spotify state.", err);
-                        if (state?.track_window?.next_tracks) {
-                            nextUpTracks = state.track_window.next_tracks.map(track => ({
-                                name: track.name,
-                                artists: track.artists.map(a => a.name),
-                                imgUrl: track.album.images?.[0]?.url || '',
-                                uri: track.uri
-                            }));
-                            nextUpContextUri = contextUri;
-                            nextUpCurrentTrackIndex = 0;
-                        }
-                    });
-                });
-            }
+        const trackChanged = newTrackUri !== currentTrackUri;
+        currentTrackUri = newTrackUri;
+        playerAlbum.classList.remove('visible');
+        playerSong.classList.remove('visible');
+        playerArtist.classList.remove('visible');
+        albumArtwork.classList.add('hidden');
+        setTimeout(() => {
+            playerAlbum.innerText = currentTrack.album.name;
+            playerSong.innerText = currentTrack.name;
+            playerArtist.innerText = currentTrack.artists.map(artist => artist.name).join(', ');
+            playerImage.src = currentTrack.album.images[0]?.url || 'imgs/icon.png'; // Fallback to placeholder
+            fullscreenImage.src = currentTrack.album.images[0]?.url || 'imgs/icon.png';
+            playerAlbum.classList.add('visible');
+            playerSong.classList.add('visible');
+            playerArtist.classList.add('visible');
+            albumArtwork.classList.remove('hidden');
+        }, trackChanged ? 300 : 0); // Skip animation if track hasn't changed
+        durationTime.innerText = formatTime(trackDuration);
         updateSeekBar(state.position, trackDuration);
         updatePlayButton(state.paused);
+        // Pre-fetch Next Up queue
+        player.getCurrentState().then(state => {
+            if (!state || !state.context?.uri) return;
+            const currentTrackUri = state.track_window.current_track.uri;
+            const contextUri = state.context.uri;
+            fetch(`${apiUrl}/rfid`)
+                .then(res => res.json())
+                .then(rfidData => {
+                    const currentAlbumUri = rfidData.spotifyUri;
+                    return fetch(`${apiUrl}/nextUp?uri=${encodeURIComponent(currentAlbumUri)}`);
+                })
+                .then(res => res.json())
+                .then(data => {
+                    const allTracks = data.albumInfo;
+                    const index = allTracks.findIndex(track => track.uri === currentTrackUri);
+                    nextUpTracks = index >= 0 ? allTracks.slice(index + 1) : [];
+                    nextUpContextUri = contextUri;
+                    nextUpCurrentTrackIndex = index;
+                })
+                .catch(err => {
+                    console.warn("Failed to prefetch next-up list. Falling back to Spotify state.", err);
+                    if (state?.track_window?.next_tracks) {
+                        nextUpTracks = state.track_window.next_tracks.map(track => ({
+                            name: track.name,
+                            artists: track.artists.map(a => a.name),
+                            imgUrl: track.album.images?.[0]?.url || 'imgs/icon.png',
+                            uri: track.uri
+                        }));
+                        nextUpContextUri = contextUri;
+                        nextUpCurrentTrackIndex = 0;
+                    }
+                });
+        });
     });
 
     togglePlayBtn.onclick = () => player.togglePlay();
@@ -195,34 +187,54 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 
 
 // Functions -- MAIN
+let debounceTimeout = null;
 function readRfidCard(player, deviceId) {
     if (polling) return;
     polling = true;
-
+    const timeout = setTimeout(() => {
+        polling = false;
+        console.warn("RFID polling timed out");
+    }, 2000);
     fetch(`${apiUrl}/rfid`)
         .then(res => res.json())
         .then(data => {
+            clearTimeout(timeout);
             polling = false;
             const { uid, spotifyUri } = data;
-
-            if (!uid && lastUid !== null) {
-                console.log("Card removed");
-                lastUid = null;
-                playerInfoHidden = true;
-                player.pause();
-                togglePlayerUi(false);
-                return;
-            }
-
-            if (uid !== lastUid && spotifyUri?.startsWith('spotify:')) {
-                console.log("New card detected!", uid);
-                lastUid = uid;
-                playerInfoHidden = false;
-                fetch(`${apiUrl}/play?uri=${encodeURIComponent(spotifyUri)}&device_id=${deviceId}`);
-                togglePlayerUi(true);
-            }
+            const normalizedUid = uid && typeof uid === 'string' && uid.trim() ? uid : null;
+            // Debounce state changes
+            if (debounceTimeout) clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                if (!normalizedUid && lastUid !== null) {
+                    console.log("Card removed, pausing playback");
+                    lastUid = null;
+                    playerInfoHidden = true;
+                    player.pause().catch(err => console.error("Pause failed:", err));
+                    togglePlayerUi(false);
+                    currentTrackUri = null;
+                    nextUpTracks = [];
+                    nextUpContextUri = '';
+                    nextUpCurrentTrackIndex = 0;
+                    return;
+                }
+                if (normalizedUid && normalizedUid !== lastUid && spotifyUri?.startsWith('spotify:')) {
+                    console.log("New card detected:", normalizedUid);
+                    lastUid = normalizedUid;
+                    playerInfoHidden = false;
+                    togglePlayerUi(true);
+                    fetch(`${apiUrl}/play?uri=${encodeURIComponent(spotifyUri)}&device_id=${deviceId}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.status !== "Playback started") {
+                                console.error("Playback failed:", data.error);
+                            }
+                        })
+                        .catch(err => console.error("Playback request failed:", err));
+                }
+            }, 200); // 200ms debounce
         })
         .catch(err => {
+            clearTimeout(timeout);
             polling = false;
             console.error("RFID polling failed:", err);
         });
