@@ -7,6 +7,7 @@ on:
     paths:
       - package.json
       - api.js
+      - docker/Dockerfile-be
   workflow_dispatch:
 
 jobs:

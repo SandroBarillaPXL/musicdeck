@@ -11,6 +11,7 @@ on:
       - config.js
       - read_rfid.py
       - imgs/**
+      - docker/Dockerfile-fe
   workflow_dispatch:
 
 jobs:
