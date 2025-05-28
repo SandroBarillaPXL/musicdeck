@@ -1,12 +1,12 @@
-# Final work - Music Deck
+# :dvd: Final work - Music Deck
 This repository is the home of all code needed to run the Music Deck project, a Spotify webplayer app that plays music using the Spotify Web API and Web Playback SDK. Playback is started by scanning an RFID-tag in in the device, which is connected to a Raspberry Pi. The app is built using Node.js and Express for the backend API, and HTML, CSS, and JavaScript for the frontend. The scripts for reading and writing to the RFID-tag are written in Python. The model for the case is designed in Tinkercad and can be 3D printed with the file included. 
 
 ## :flower_playing_cards: Screenshots
 Extra functions include a queue, volume slider and fullscreen mode. The app is designed to be used on a touchscreen, but can also be used with a mouse and keyboard. <br><br>
-<img src="imgs/img1.png" alt="home" width="300"/><br><br>
-<img src="imgs/img2.png" alt="play" width="300"/><br><br>
-<img src="imgs/img3.png" alt="volume" width="300"/><br><br>
-<img src="imgs/img4.png" alt="fullscreen" width="300"/><br><br>
+<img src="imgs/img1.png" alt="home" width="300"/><br>
+<img src="imgs/img2.png" alt="play" width="300"/><br>
+<img src="imgs/img3.png" alt="volume" width="300"/><br>
+<img src="imgs/img4.png" alt="fullscreen" width="300"/><br>
 
 ## :wrench: Installation
 ### :bust_in_silhouette: Prerequisites
