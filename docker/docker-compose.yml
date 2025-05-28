@@ -5,6 +5,7 @@ services:
     image: sandropxl/musicdeck:pi-fe
     ports:
       - "5500:80"
+    restart: always
   backend:
     container_name: backend
     image: sandropxl/musicdeck:pi-be
@@ -15,6 +16,7 @@ services:
     devices:
       - /dev:/dev
     privileged: true
+    restart: always
   watchtower:
     container_name: watchtower
     image: containrrr/watchtower
@@ -24,3 +26,4 @@ services:
     volumes:
         - /etc/localtime:/etc/localtime
         - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
