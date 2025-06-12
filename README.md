@@ -87,6 +87,10 @@ docker compose -f ./docker/docker-compose.yml up -d
 Thanks to [Jeff Geerling's kiosk code](https://github.com/geerlingguy/pi-kiosk), the app can be automatically started on boot and run in kiosk mode on a Raspberry Pi. This means the app will run in fullscreen mode and the user will not be able to access the desktop or other applications. The app automatically starts with docker compose's `restart: always` option. The kiosk mode is configured in the [`kiosk.sh`](./kiosk/kiosk.sh) file, which is run on boot through the [`kiosk.service`](./kiosk/kiosk.service) service. The script starts the Chromium browser in kiosk mode and navigates to the app's URL.
 
 
+## Final product
+Click on the image below to see the showreel of Music Deck
+[![key image](imgs/barilla_sandro_key_image2.jpg)](https://www.youtube.com/watch?v=fDIq4Y5m0WE)
+
 ## :shopping_cart: Items used
 <details>
 <summary>Hardware</summary>
