@@ -307,7 +307,7 @@ function togglePlayerUi(show) {
         playerArtist.classList.remove('visible');
         // Reset placeholder content and images immediately
         playerSong.innerText = "No song playing";
-        playerArtist.innerText = "Insert a coin to play";
+        playerArtist.innerText = "Insert a coin above to play";
         playerAlbum.innerText = "";
         playerImage.src = "imgs/icon.png";
         // Fade text back in
